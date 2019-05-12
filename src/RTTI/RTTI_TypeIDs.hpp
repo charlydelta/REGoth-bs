@@ -64,5 +64,6 @@ namespace REGoth
     TID_REGOTH_Freepoint                    = 600056,
     TID_REGOTH_ShadowSampler                = 600057,
     TID_REGOTH_RaycastShadowSampler         = 600058,
+    TID_REGOTH_ShadowSampling               = 600059,
   };
 }  // namespace REGoth
