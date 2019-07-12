@@ -62,7 +62,7 @@ else()
   # Need to reset RPATH-settings to default again because bsf has messed with them.
   # See https://gitlab.kitware.com/cmake/community/wikis/doc/cmake/RPATH-handling
   # use, i.e. don't skip the full RPATH for the build tree
-  set(CMAKE_SKIP_BUILD_RPATH  FALSE)
+  set(CMAKE_SKIP_BUILD_RPATH FALSE)
 
   # when building, don't use the install RPATH already
   # (but later on when installing)
@@ -76,6 +76,13 @@ endif()
 # have a bsf-target, skip that.
 set(BSZENLIB_SKIP_FIND_BSF ON CACHE BOOL "" FORCE)
 add_subdirectory(lib/BsZenLib)
+
+# cxxopts as library to parse command line options
+set(CXXOPTS_BUILD_EXAMPLES OFF)
+set(CXXOPTS_BUILD_TESTS OFF)
+add_definitions(-DCXXOPTS_NO_RTTI)
+add_subdirectory(lib/cxxopts)
+add_compile_options(-fexceptions) # cxxopts uses exceptions
 
 ###############################################################################
 #                               Add Samples, etc                              #
