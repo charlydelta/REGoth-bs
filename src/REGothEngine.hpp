@@ -4,6 +4,7 @@
 #pragma once
 
 #include <BsPrerequisites.h>
+#include <cxxopts.hpp>
 
 namespace REGoth
 {
@@ -119,7 +120,21 @@ namespace REGoth
      */
     void shutdown();
 
+    /**
+     * @brief Registers command line options.
+     * @param opts cxxopts Options object.
+     */
+    virtual void registerArguments(cxxopts::Options& opts);
+
+    /**
+     * @brief Verifies the parsed command line options results.
+     * @param result cxxopts Results object.
+     * @return true if options are valid, false otherwise.
+     */
+    virtual bool checkArguments(cxxopts::ParseResult& result);
+
   protected:
+
     /**
      * Main camera this engines renders with
      */

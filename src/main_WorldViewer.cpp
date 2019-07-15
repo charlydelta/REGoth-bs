@@ -1,5 +1,4 @@
 #include "BsFPSCamera.h"
-#include <cxxopts.hpp>
 #include <REGothEngine.hpp>
 #include <Components/BsCCamera.h>
 #include <Scene/BsPrefab.h>
@@ -45,15 +44,14 @@ public:
   {
     using namespace REGoth;
 
-    const bs::String WORLD    = "NEWWORLD.ZEN";
-    const bs::String SAVEGAME = "WorldViewer-" + WORLD;
+    const bs::String SAVEGAME = "WorldViewer-" + mWorld;
 
     bs::HPrefab worldPrefab = GameWorld::load(SAVEGAME);
     HGameWorld world;
 
     if (!worldPrefab)
     {
-      world = GameWorld::importZEN(WORLD);
+      world = GameWorld::importZEN(mWorld);
 
       HCharacter hero = world->insertCharacter("PC_HERO", "START");
       hero->useAsHero();
@@ -86,19 +84,36 @@ public:
     REGoth::GameplayUI::createGlobal(mMainCamera);
   }
 
+  virtual void registerArguments(cxxopts::Options& opts) override
+  {
+    opts.add_options()
+      ("w,world", "World name to load", cxxopts::value<bs::String>(mWorld), "[NAME]")
+      ;
+  }
+
+  virtual bool checkArguments(cxxopts::ParseResult& result) override
+  {
+    if (mWorld.empty())
+    {
+      return false;
+    }
+
+    bs::StringUtil::toUpperCase(mWorld);
+    if (not bs::StringUtil::endsWith(mWorld, ".ZEN"))
+    {
+      mWorld += ".ZEN";
+    }
+
+    return true;
+  }
+
 protected:
   REGoth::HThirdPersonCamera mThirdPersonCamera;
+  bs::String mWorld;
 };
 
 int main(int argc, char** argv)
 {
-  cxxopts::Options options("REGothWorldViewer", "Viewer for Gothic and Gothic 2 worlds");
-  options.add_options()
-    ("h,help", "Print this help message")
-    ("v,version", "Print the REGoth version")
-    ("w,world", "World name to load", cxxopts::value<std::string>())
-    ;
-
   REGothWorldViewer regoth;
 
   return REGoth::main(regoth, argc, argv);

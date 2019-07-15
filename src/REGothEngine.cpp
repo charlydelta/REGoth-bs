@@ -1,5 +1,6 @@
 #include "REGothEngine.hpp"
 #include <BsApplication.h>
+#include <cxxopts.hpp>
 #include <assert.h>
 #include <BsZenLib/ImportMaterial.hpp>
 #include <BsZenLib/ImportPath.hpp>
@@ -20,6 +21,18 @@ using namespace REGoth;
  * Name of REGoth's own content directory
  */
 const bs::String REGOTH_CONTENT_DIR_NAME = "content";
+
+/**
+ * @brief Allows using the bs::Path data type together with cxxopts.
+ * @param str Input stringstream.
+ * @param path Path to write data to.
+ * @return stringstream.
+ */
+std::stringstream& operator>>(std::stringstream& str, bs::Path& path)
+{
+  path.assign(bs::Path(str.str().c_str()));
+  return str;
+}
 
 REGothEngine::~REGothEngine()
 {
@@ -214,21 +227,71 @@ void REGothEngine::shutdown()
   }
 }
 
+void REGothEngine::registerArguments(cxxopts::Options& /* opts */)
+{
+  // pass
+}
+
+bool REGothEngine::checkArguments(cxxopts::ParseResult& /* result */)
+{
+  return true;
+}
+
 int ::REGoth::main(REGothEngine& regoth, int argc, char** argv)
 {
-  regoth.initializeBsf();
+  bool help = false;
+  bool version = false;
+  bs::Path engineExecutablePath{argv[0]};
+  bs::Path gameDirectory;
+  bs::Path world;
 
-  if (argc < 2)
+  cxxopts::Options options(argv[0], "REGoth - zEngine Reimplementation.");
+  options.positional_help("[GAME ASSETS PATH]");
+  options.show_positional_help();
+  options.add_options()
+    ("a,game-assets", "Path to a Gothic or Gothic 2 installation", cxxopts::value<bs::Path>(gameDirectory), "[PATH]")
+    ("h,help", "Print this help message", cxxopts::value<bool>(help))
+    ("v,version", "Print the REGoth version", cxxopts::value<bool>(version))
+    ;
+
+  regoth.registerArguments(options);
+
+  options.parse_positional({"game-assets"});
+  cxxopts::ParseResult result = options.parse(argc, argv);
+
+  // Print help if `-h` or `--help` is passed and exit.
+  if (help)
   {
-    std::cout << "Usage: REGoth <path/to/game>" << std::endl;
-    return -1;
+    std::cout << options.help() << std::endl;
+    return EXIT_SUCCESS;
   }
 
-  bs::Path engineExecutablePath = bs::Path(argv[0]);
-  bs::Path gameDirectory        = bs::Path(argv[1]);
+  // Print REGoth version if `-v` or `--version` is passed and exit.
+  if (version)
+  {
+    std::cout << "Not yet implemented" << std::endl;
+    return EXIT_SUCCESS;
+  }
+
+  // Assert that the game assets directory was specified.
+  if (result.count("game-assets") == 0)
+  {
+    std::cerr << "No path to a Gothic or Gothic 2 installation was given. "
+              << "You can specify the path via the first positional argument or "
+              << "using the `--game-assets` argument." << std::endl;
+    std::cerr << "Aborting." << std::endl;
+    return EXIT_FAILURE;
+  }
 
   engineExecutablePath.makeAbsolute(bs::FileSystem::getWorkingDirectoryPath());
   gameDirectory.makeAbsolute(bs::FileSystem::getWorkingDirectoryPath());
+
+  if (not regoth.checkArguments(result))
+  {
+    return EXIT_FAILURE;
+  }
+
+  regoth.initializeBsf();
 
   bs::gDebug().logDebug("[Main] Running REGothEngine");
   bs::gDebug().logDebug("[Main]  - Engine executable: " + engineExecutablePath.toString());
@@ -242,8 +305,8 @@ int ::REGoth::main(REGothEngine& regoth, int argc, char** argv)
 
   if (!regoth.hasFoundGameFiles())
   {
-    std::cout << "No files loaded into the VDFS - is the datapath correct?" << std::endl;
-    return -1;
+    std::cerr << "No files loaded into the VDFS - is the game assets path correct?" << std::endl;
+    return EXIT_FAILURE;
   }
 
   regoth.loadCachedResourceManifests();
@@ -269,5 +332,5 @@ int ::REGoth::main(REGothEngine& regoth, int argc, char** argv)
 
   regoth.shutdown();
 
-  return 0;
+  return EXIT_SUCCESS;
 }

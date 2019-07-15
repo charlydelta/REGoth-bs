@@ -80,9 +80,8 @@ add_subdirectory(lib/BsZenLib)
 # cxxopts as library to parse command line options
 set(CXXOPTS_BUILD_EXAMPLES OFF)
 set(CXXOPTS_BUILD_TESTS OFF)
-add_definitions(-DCXXOPTS_NO_RTTI)
+add_definitions(-DCXXOPTS_NO_RTTI -DCXXOPTS_NO_EXCEPTIONS)
 add_subdirectory(lib/cxxopts)
-add_compile_options(-fexceptions) # cxxopts uses exceptions
 
 ###############################################################################
 #                               Add Samples, etc                              #

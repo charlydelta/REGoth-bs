@@ -159,6 +159,7 @@ add_library(REGothEngine
 
 target_link_libraries(REGothEngine PUBLIC bsf BsZenLib)
 target_link_libraries(REGothEngine PUBLIC ${OpenMP_CXX_LIBRARIES})
+target_link_libraries(REGothEngine PUBLIC cxxopts)
 target_include_directories(REGothEngine PUBLIC .)
 
 add_executable(REGoth main.cpp)
@@ -168,7 +169,7 @@ add_executable(REGothCharacterViewer main_CharacterViewer.cpp)
 target_link_libraries(REGothCharacterViewer REGothEngine samples-common)
 
 add_executable(REGothWorldViewer main_WorldViewer.cpp)
-target_link_libraries(REGothWorldViewer REGothEngine samples-common cxxopts)
+target_link_libraries(REGothWorldViewer REGothEngine samples-common)
 
 add_executable(REGothWorldMeshViewer main_WorldMeshViewer.cpp)
 target_link_libraries(REGothWorldMeshViewer REGothEngine samples-common)
