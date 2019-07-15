@@ -126,13 +126,6 @@ namespace REGoth
      */
     virtual void registerArguments(cxxopts::Options& opts);
 
-    /**
-     * @brief Verifies the parsed command line options results.
-     * @param result cxxopts Results object.
-     * @return true if options are valid, false otherwise.
-     */
-    virtual bool checkArguments(cxxopts::ParseResult& result);
-
   protected:
 
     /**

@@ -44,6 +44,17 @@ public:
   {
     using namespace REGoth;
 
+    if (mWorld.empty())
+    {
+      REGOTH_THROW(InvalidStateException, "World cannot be empty.");
+    }
+
+    bs::StringUtil::toUpperCase(mWorld);
+    if (not bs::StringUtil::endsWith(mWorld, ".ZEN"))
+    {
+      mWorld += ".ZEN";
+    }
+
     const bs::String SAVEGAME = "WorldViewer-" + mWorld;
 
     bs::HPrefab worldPrefab = GameWorld::load(SAVEGAME);
@@ -89,22 +100,6 @@ public:
     opts.add_options()
       ("w,world", "World name to load", cxxopts::value<bs::String>(mWorld), "[NAME]")
       ;
-  }
-
-  virtual bool checkArguments(cxxopts::ParseResult& result) override
-  {
-    if (mWorld.empty())
-    {
-      return false;
-    }
-
-    bs::StringUtil::toUpperCase(mWorld);
-    if (not bs::StringUtil::endsWith(mWorld, ".ZEN"))
-    {
-      mWorld += ".ZEN";
-    }
-
-    return true;
   }
 
 protected:

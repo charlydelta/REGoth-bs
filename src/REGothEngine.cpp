@@ -232,11 +232,6 @@ void REGothEngine::registerArguments(cxxopts::Options& /* opts */)
   // pass
 }
 
-bool REGothEngine::checkArguments(cxxopts::ParseResult& /* result */)
-{
-  return true;
-}
-
 int ::REGoth::main(REGothEngine& regoth, int argc, char** argv)
 {
   bool help = false;
@@ -285,11 +280,6 @@ int ::REGoth::main(REGothEngine& regoth, int argc, char** argv)
 
   engineExecutablePath.makeAbsolute(bs::FileSystem::getWorkingDirectoryPath());
   gameDirectory.makeAbsolute(bs::FileSystem::getWorkingDirectoryPath());
-
-  if (not regoth.checkArguments(result))
-  {
-    return EXIT_FAILURE;
-  }
 
   regoth.initializeBsf();
 
