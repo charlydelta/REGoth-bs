@@ -19,6 +19,8 @@
 class REGothFontViewer : public REGoth::REGothEngine
 {
 public:
+  REGothFontViewer(const REGoth::EngineConfig& config) : REGoth::REGothEngine(config) {}
+
   void setupMainCamera() override
   {
     REGoth::REGothEngine::setupMainCamera();
@@ -57,7 +59,9 @@ protected:
 
 int main(int argc, char** argv)
 {
-  REGothFontViewer regoth;
+  REGoth::EngineConfig config;
+  REGoth::parseArguments(argc, argv, config);
+  REGothFontViewer engine{config};
 
-  return REGoth::main(regoth, argc, argv);
+  return REGoth::runEngine(engine);
 }

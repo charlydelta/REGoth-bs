@@ -9,6 +9,8 @@
 class REGothMobViewer : public REGoth::REGothEngine
 {
 public:
+  REGothMobViewer(const REGoth::EngineConfig& config) : REGoth::REGothEngine(config) {}
+
   void setupMainCamera() override
   {
     REGoth::REGothEngine::setupMainCamera();
@@ -49,7 +51,9 @@ protected:
 
 int main(int argc, char** argv)
 {
-  REGothMobViewer regoth;
+  REGoth::EngineConfig config;
+  REGoth::parseArguments(argc, argv, config);
+  REGothMobViewer engine{config};
 
-  return REGoth::main(regoth, argc, argv);
+  return REGoth::runEngine(engine);
 }

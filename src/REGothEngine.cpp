@@ -17,32 +17,32 @@
 
 using namespace REGoth;
 
+std::stringstream& operator>>(std::stringstream& str, bs::Path& path)
+{
+  path.assign(bs::Path{str.str().c_str()});
+  return str;
+}
+
 /**
  * Name of REGoth's own content directory
  */
 const bs::String REGOTH_CONTENT_DIR_NAME = "content";
 
-/**
- * @brief Allows using the bs::Path data type together with cxxopts.
- * @param str Input stringstream.
- * @param path Path to write data to.
- * @return stringstream.
- */
-std::stringstream& operator>>(std::stringstream& str, bs::Path& path)
+REGothEngine::REGothEngine(const EngineConfig& config) :
+  mConfig{config}
 {
-  path.assign(bs::Path(str.str().c_str()));
-  return str;
+  // pass
 }
 
 REGothEngine::~REGothEngine()
 {
 }
 
-void REGothEngine::loadGamePackages(const bs::Path& executablePath, const bs::Path& gameDirectory)
+void REGothEngine::loadGamePackages()
 {
-  OriginalGameFiles files = OriginalGameFiles(gameDirectory);
+  OriginalGameFiles files = OriginalGameFiles(mConfig.assetsPath);
 
-  gVirtualFileSystem().setPathToEngineExecutable(executablePath.toString());
+  gVirtualFileSystem().setPathToEngineExecutable(mConfig.gameExecutable.toString());
 
   bs::gDebug().logDebug("[VDFS] Indexing packages: ");
 
@@ -79,9 +79,9 @@ bool REGothEngine::hasFoundGameFiles()
   return gVirtualFileSystem().hasFoundGameFiles();
 }
 
-void REGothEngine::findEngineContent(const bs::Path& executablePath)
+void REGothEngine::findEngineContent()
 {
-  mEngineContent = bs::bs_shared_ptr_new<EngineContent>(executablePath);
+  mEngineContent = bs::bs_shared_ptr_new<EngineContent>(mConfig.gameExecutable);
 
   if (!mEngineContent->hasFoundContentDirectory())
   {
@@ -96,9 +96,8 @@ void REGothEngine::initializeBsf()
 {
   using namespace bs;
 
-  // TODO: Make video mode configurable
-  VideoMode videoMode(1280, 720);
-  Application::startUp(videoMode, "REGoth", false);
+  VideoMode videoMode{mConfig.resolutionX, mConfig.resolutionY};
+  Application::startUp(videoMode, "REGoth", mConfig.fullscreen);
 }
 
 void REGothEngine::loadCachedResourceManifests()
@@ -227,100 +226,94 @@ void REGothEngine::shutdown()
   }
 }
 
-void REGothEngine::registerArguments(cxxopts::Options& /* opts */)
+void ::REGoth::parseArguments(int argc, char** argv, EngineConfig& config)
 {
-  // pass
-}
+  bool help;
+  bool version;
 
-int ::REGoth::main(REGothEngine& regoth, int argc, char** argv)
-{
-  bool help = false;
-  bool version = false;
-  bs::Path engineExecutablePath{argv[0]};
-  bs::Path gameDirectory;
-  bs::Path world;
+  cxxopts::Options options{argv[0], "REGoth - zEngine Reimplementation."};
 
-  cxxopts::Options options(argv[0], "REGoth - zEngine Reimplementation.");
-  options.positional_help("[GAME ASSETS PATH]");
-  options.show_positional_help();
+  // Add general options.
   options.add_options()
-    ("a,game-assets", "Path to a Gothic or Gothic 2 installation", cxxopts::value<bs::Path>(gameDirectory), "[PATH]")
     ("h,help", "Print this help message", cxxopts::value<bool>(help))
-    ("v,version", "Print the REGoth version", cxxopts::value<bool>(version))
+    ("version", "Print the REGoth version", cxxopts::value<bool>(version))
+    ("v,verbosity", "Verbosity level", cxxopts::value<bool>())
     ;
 
-  regoth.registerArguments(options);
+  // Add general engine options.
+  config.registerCLIEngineOptions(options);
 
-  options.parse_positional({"game-assets"});
+  // Add executable-specific options.
+  config.registerCLIOptions(options);
+
+  // Parse argv.
   cxxopts::ParseResult result = options.parse(argc, argv);
 
   // Print help if `-h` or `--help` is passed and exit.
   if (help)
   {
     std::cout << options.help() << std::endl;
-    return EXIT_SUCCESS;
+    std::exit(EXIT_SUCCESS);
   }
 
-  // Print REGoth version if `-v` or `--version` is passed and exit.
+  // Print REGoth version if `--version` is passed and exit.
   if (version)
   {
     std::cout << "Not yet implemented" << std::endl;
-    return EXIT_SUCCESS;
+    std::exit(EXIT_SUCCESS);
   }
 
-  // Assert that the game assets directory was specified.
-  if (result.count("game-assets") == 0)
-  {
-    std::cerr << "No path to a Gothic or Gothic 2 installation was given. "
-              << "You can specify the path via the first positional argument or "
-              << "using the `--game-assets` argument." << std::endl;
-    std::cerr << "Aborting." << std::endl;
-    return EXIT_FAILURE;
-  }
+  // Set verbosity level.
+  config.verbosity = static_cast<unsigned int>(result.count("verbosity"));
 
-  engineExecutablePath.makeAbsolute(bs::FileSystem::getWorkingDirectoryPath());
-  gameDirectory.makeAbsolute(bs::FileSystem::getWorkingDirectoryPath());
+  // Game executable path must be set manually here.
+  config.gameExecutable = bs::Path{argv[0]};
+}
 
-  regoth.initializeBsf();
+int ::REGoth::runEngine(REGothEngine& engine)
+{
+  engine.initializeBsf();
 
   bs::gDebug().logDebug("[Main] Running REGothEngine");
-  bs::gDebug().logDebug("[Main]  - Engine executable: " + engineExecutablePath.toString());
-  bs::gDebug().logDebug("[Main]  - Game directory:    " + gameDirectory.toString());
+  //bs::gDebug().logDebug("[Main]  - Engine executable: " + engineExecutablePath.toString());
+  //bs::gDebug().logDebug("[Main]  - Game directory:    " + gameDirectory.toString());
 
   bs::gDebug().logDebug("[Main] Finding REGoth content-directory");
-  regoth.findEngineContent(engineExecutablePath);
+  engine.findEngineContent();
 
   bs::gDebug().logDebug("[Main] Loading original game packages");
-  regoth.loadGamePackages(engineExecutablePath, gameDirectory);
+  engine.loadGamePackages();
 
-  if (!regoth.hasFoundGameFiles())
+  if (!engine.hasFoundGameFiles())
   {
     std::cerr << "No files loaded into the VDFS - is the game assets path correct?" << std::endl;
     return EXIT_FAILURE;
   }
 
-  regoth.loadCachedResourceManifests();
+  bs::gDebug().logDebug("[REGothEngine] Load cached resource manifests");
+  engine.loadCachedResourceManifests();
 
   bs::gDebug().logDebug("[REGothEngine] Loading Shaders");
-
-  regoth.setShaders();
-  regoth.setupInput();
+  engine.setShaders();
+  engine.setupInput();
 
   bs::gDebug().logDebug("[REGothEngine] Setting up Main Camera");
-
-  regoth.setupMainCamera();
+  engine.setupMainCamera();
 
   bs::gDebug().logDebug("[REGothEngine] Setting up Scene");
+  engine.setupScene();
 
-  regoth.setupScene();
+  bs::gDebug().logDebug("[REGothEngine] Save cached resource manifests");
+  engine.saveCachedResourceManifests();
 
-  regoth.saveCachedResourceManifests();
+  bs::gDebug().logDebug("[REGothEngine] Run");
+  engine.run();
 
-  regoth.run();
+  bs::gDebug().logDebug("[REGothEngine] Save cached resource manifests");
+  engine.saveCachedResourceManifests();
 
-  regoth.saveCachedResourceManifests();
-
-  regoth.shutdown();
+  bs::gDebug().logDebug("[REGothEngine] Shutdown");
+  engine.shutdown();
 
   return EXIT_SUCCESS;
 }

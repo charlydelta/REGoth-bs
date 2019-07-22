@@ -14,9 +14,27 @@
 #include <original-content/OriginalGameFiles.hpp>
 #include <original-content/VirtualFileSystem.hpp>
 
+class Config : public REGoth::EngineConfig
+{
+
+public:
+
+  virtual void registerCLIOptions(cxxopts::Options& opts) override
+  {
+    opts.add_options()
+      ("w,world", "World name to load", cxxopts::value<bs::String>(world), "[NAME]")
+      ;
+  }
+
+  bs::String world;
+
+};
+
 class REGothWorldViewer : public REGoth::REGothEngine
 {
 public:
+  REGothWorldViewer(const Config& config) : REGoth::REGothEngine(config), mConfig{config} {}
+
   void loadModPackages(const REGoth::OriginalGameFiles& files) override
   {
     // using namespace REGoth;
@@ -44,25 +62,26 @@ public:
   {
     using namespace REGoth;
 
-    if (mWorld.empty())
+    if (mConfig.world.empty())
     {
       REGOTH_THROW(InvalidStateException, "World cannot be empty.");
     }
 
-    bs::StringUtil::toUpperCase(mWorld);
-    if (not bs::StringUtil::endsWith(mWorld, ".ZEN"))
+    bs::String worldName = mConfig.world;
+    bs::StringUtil::toUpperCase(worldName);
+    if (not bs::StringUtil::endsWith(worldName, ".ZEN"))
     {
-      mWorld += ".ZEN";
+      worldName += ".ZEN";
     }
 
-    const bs::String SAVEGAME = "WorldViewer-" + mWorld;
+    const bs::String SAVEGAME = "WorldViewer-" + worldName;
 
     bs::HPrefab worldPrefab = GameWorld::load(SAVEGAME);
     HGameWorld world;
 
     if (!worldPrefab)
     {
-      world = GameWorld::importZEN(mWorld);
+      world = GameWorld::importZEN(worldName);
 
       HCharacter hero = world->insertCharacter("PC_HERO", "START");
       hero->useAsHero();
@@ -95,21 +114,21 @@ public:
     REGoth::GameplayUI::createGlobal(mMainCamera);
   }
 
-  virtual void registerArguments(cxxopts::Options& opts) override
-  {
-    opts.add_options()
-      ("w,world", "World name to load", cxxopts::value<bs::String>(mWorld), "[NAME]")
-      ;
-  }
-
 protected:
+
   REGoth::HThirdPersonCamera mThirdPersonCamera;
-  bs::String mWorld;
+
+private:
+
+  Config mConfig;
+
 };
 
 int main(int argc, char** argv)
 {
-  REGothWorldViewer regoth;
+  Config config;
+  REGoth::parseArguments(argc, argv, config);
+  REGothWorldViewer engine{config};
 
-  return REGoth::main(regoth, argc, argv);
+  return REGoth::runEngine(engine);
 }

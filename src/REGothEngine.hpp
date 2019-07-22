@@ -3,13 +3,68 @@
 
 #pragma once
 
+#include <iostream>
+
 #include <BsPrerequisites.h>
 #include <cxxopts.hpp>
+
+/**
+ * @brief Allows using the bs::Path data type together with cxxopts.
+ * @param str Input stringstream.
+ * @param path Path to write data to.
+ * @return stringstream.
+ */
+std::stringstream& operator>>(std::stringstream& str, bs::Path& path);
 
 namespace REGoth
 {
   class EngineContent;
   class OriginalGameFiles;
+
+  /**
+   * The base configuration of the engine.
+   */
+  class EngineConfig
+  {
+
+  public:
+
+    virtual ~EngineConfig()
+    {
+      // pass
+    }
+
+    void registerCLIEngineOptions(cxxopts::Options& options)
+    {
+      // Configure positional handling
+      options.positional_help("[GAME ASSETS PATH]");
+      options.show_positional_help();
+
+      // Define engine options
+      options.add_options()
+        ("a,game-assets", "Path to a Gothic or Gothic 2 installation", cxxopts::value<bs::Path>(assetsPath), "[PATH]")
+        ("video-x-res", "X resolution", cxxopts::value<unsigned int>(resolutionX), "[PX]")
+        ("video-y-res", "Y resolution", cxxopts::value<unsigned int>(resolutionY), "[PX]")
+        ("video-fullscreen", "Run in fullscreen mode", cxxopts::value<bool>(fullscreen))
+        ;
+
+      // Allow game-assets to also be a positional
+      options.parse_positional({"game-assets"});
+    }
+
+    virtual void registerCLIOptions(cxxopts::Options& /* options */)
+    {
+      // pass
+    }
+
+    unsigned int verbosity = 0;
+    bs::Path gameExecutable;
+    bs::Path assetsPath;
+    unsigned int resolutionX = 1280;
+    unsigned int resolutionY = 768;
+    bool fullscreen = false;
+
+  };
 
   /**
    * This is the REGoth-Core-Class, which initializes the engine, sets the
@@ -33,8 +88,10 @@ namespace REGoth
    */
   class REGothEngine
   {
+
   public:
-    REGothEngine() = default;
+
+    REGothEngine(const EngineConfig& config);
     virtual ~REGothEngine();
 
     /**
@@ -47,7 +104,7 @@ namespace REGoth
      * @param  executablePath  Path to the currently running executable (argv[0])
      * @param  gameDirectory   Location where Gothics game files can be found.
      */
-    void loadGamePackages(const bs::Path& executablePath, const bs::Path& gameDirectory);
+    void loadGamePackages();
 
     /**
      * Called by loadOriginalGamePackages(). Can be overriden by the user to load specific
@@ -108,7 +165,7 @@ namespace REGoth
      *
      * @param  executablePath  Path to the currently running executable.
      */
-    void findEngineContent(const bs::Path& executablePath);
+    void findEngineContent();
 
     /**
      * Run the main-loop
@@ -119,12 +176,6 @@ namespace REGoth
      * Shutdown bsf
      */
     void shutdown();
-
-    /**
-     * @brief Registers command line options.
-     * @param opts cxxopts Options object.
-     */
-    virtual void registerArguments(cxxopts::Options& opts);
 
   protected:
 
@@ -137,16 +188,17 @@ namespace REGoth
      * Path to REGoth's own `content`-directory and resource loader.
      */
     bs::SPtr<EngineContent> mEngineContent;
+
+  private:
+
+    /**
+     * Engine base configuration
+     */
+    EngineConfig mConfig;
+
   };
 
-  /**
-   * Boilerplate-code to setup and run the given engine
-   *
-   * @param  regoth  Untouched fresh instance of the engine class you want to run
-   * @param    argc  `argc` as in `main`
-   * @param    argv  `argv` as in `main`
-   *
-   * @return Return value as in `main`.
-   */
-  int main(REGothEngine& regoth, int argc, char** argv);
+  void parseArguments(int argc, char** argv, EngineConfig& config);
+  int runEngine(REGothEngine& engine);
+
 }  // namespace REGoth

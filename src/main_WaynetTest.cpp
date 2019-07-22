@@ -13,6 +13,8 @@
 class REGothWaynetTester : public REGoth::REGothEngine
 {
 public:
+  REGothWaynetTester(const REGoth::EngineConfig& config) : REGoth::REGothEngine(config) {}
+
   void setupMainCamera() override
   {
     REGoth::REGothEngine::setupMainCamera();
@@ -42,7 +44,9 @@ protected:
 
 int main(int argc, char** argv)
 {
-  REGothWaynetTester regoth;
+  REGoth::EngineConfig config;
+  REGoth::parseArguments(argc, argv, config);
+  REGothWaynetTester engine{config};
 
-  return REGoth::main(regoth, argc, argv);
+  return REGoth::runEngine(engine);
 }
