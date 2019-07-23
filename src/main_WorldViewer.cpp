@@ -36,7 +36,7 @@ public:
 
     // Unify possible inputs.
     bs::StringUtil::toUpperCase(world);
-    if (not bs::StringUtil::endsWith(world, ".ZEN"))
+    if (!bs::StringUtil::endsWith(world, ".ZEN"))
     {
       world += ".ZEN";
     }
@@ -51,7 +51,7 @@ class REGothWorldViewer : public REGoth::REGothEngine
 public:
   REGothWorldViewer(const Config& config) : REGoth::REGothEngine(config) {}
 
-  const Config& config() override
+  const Config& config() const override
   {
     return static_cast<const Config&>(mConfig);
   }

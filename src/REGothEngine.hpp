@@ -44,7 +44,7 @@ namespace REGoth
 
       // Define engine options
       options.add_options()
-        ("a,game-assets", "Path to a Gothic or Gothic 2 installation", cxxopts::value<bs::Path>(originalAssetsPath), "[PATH]")
+        ("g,game-assets", "Path to a Gothic or Gothic 2 installation", cxxopts::value<bs::Path>(originalAssetsPath), "[PATH]")
         ("video-x-res", "X resolution", cxxopts::value<unsigned int>(resolutionX), "[PX]")
         ("video-y-res", "Y resolution", cxxopts::value<unsigned int>(resolutionY), "[PX]")
         ("video-fullscreen", "Run in fullscreen mode", cxxopts::value<bool>(isFullscreen))
@@ -199,7 +199,7 @@ namespace REGoth
      *
      * @return Engine configuration data structure.
      */
-    virtual const EngineConfig& config();
+    virtual const EngineConfig& config() const;
 
   protected:
 
@@ -214,7 +214,7 @@ namespace REGoth
     bs::SPtr<EngineContent> mEngineContent;
 
     /**
-     * Engine base configuration
+     * Engine base configuration.
      */
     const EngineConfig mConfig;
 

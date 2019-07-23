@@ -226,9 +226,9 @@ void REGothEngine::shutdown()
   }
 }
 
-const EngineConfig& REGothEngine::config()
+const EngineConfig& REGothEngine::config() const
 {
-  return config();
+  return mConfig;
 }
 
 void ::REGoth::parseArguments(int argc, char** argv, EngineConfig& config)
