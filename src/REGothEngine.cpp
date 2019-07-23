@@ -40,9 +40,9 @@ REGothEngine::~REGothEngine()
 
 void REGothEngine::loadGamePackages()
 {
-  OriginalGameFiles files = OriginalGameFiles(mConfig.assetsPath);
+  OriginalGameFiles files = OriginalGameFiles(config().originalAssetsPath);
 
-  gVirtualFileSystem().setPathToEngineExecutable(mConfig.gameExecutable.toString());
+  gVirtualFileSystem().setPathToEngineExecutable(config().engineExecutablePath.toString());
 
   bs::gDebug().logDebug("[VDFS] Indexing packages: ");
 
@@ -81,7 +81,7 @@ bool REGothEngine::hasFoundGameFiles()
 
 void REGothEngine::findEngineContent()
 {
-  mEngineContent = bs::bs_shared_ptr_new<EngineContent>(mConfig.gameExecutable);
+  mEngineContent = bs::bs_shared_ptr_new<EngineContent>(config().engineExecutablePath);
 
   if (!mEngineContent->hasFoundContentDirectory())
   {
@@ -96,8 +96,8 @@ void REGothEngine::initializeBsf()
 {
   using namespace bs;
 
-  VideoMode videoMode{mConfig.resolutionX, mConfig.resolutionY};
-  Application::startUp(videoMode, "REGoth", mConfig.fullscreen);
+  VideoMode videoMode{config().resolutionX, config().resolutionY};
+  Application::startUp(videoMode, "REGoth", config().isFullscreen);
 }
 
 void REGothEngine::loadCachedResourceManifests()
@@ -226,6 +226,11 @@ void REGothEngine::shutdown()
   }
 }
 
+const EngineConfig& REGothEngine::config()
+{
+  return config();
+}
+
 void ::REGoth::parseArguments(int argc, char** argv, EngineConfig& config)
 {
   bool help;
@@ -240,10 +245,8 @@ void ::REGoth::parseArguments(int argc, char** argv, EngineConfig& config)
     ("v,verbosity", "Verbosity level", cxxopts::value<bool>())
     ;
 
-  // Add general engine options.
+  // Add options (engine options and specialised ones).
   config.registerCLIEngineOptions(options);
-
-  // Add executable-specific options.
   config.registerCLIOptions(options);
 
   // Parse argv.
@@ -267,7 +270,11 @@ void ::REGoth::parseArguments(int argc, char** argv, EngineConfig& config)
   config.verbosity = static_cast<unsigned int>(result.count("verbosity"));
 
   // Game executable path must be set manually here.
-  config.gameExecutable = bs::Path{argv[0]};
+  config.engineExecutablePath = bs::Path{argv[0]};
+
+  // Verify configuration.
+  config.verifyCLIEngineOptions();
+  config.verifyCLIOptions();
 }
 
 int ::REGoth::runEngine(REGothEngine& engine)

@@ -7,7 +7,8 @@
 class REGothWorldMeshViewer : public REGoth::REGothEngine
 {
 public:
-  REGothWorldMeshViewer(const REGoth::EngineConfig& config) : REGoth::REGothEngine(config) {}
+
+  using REGoth::REGothEngine::REGothEngine;
 
   void setupMainCamera() override
   {

@@ -6,10 +6,12 @@
 #include <iostream>
 
 #include <BsPrerequisites.h>
+#include <FileSystem/BsFileSystem.h>
 #include <cxxopts.hpp>
 
 /**
- * @brief Allows using the bs::Path data type together with cxxopts.
+ * Allows using the bs::Path data type together with cxxopts.
+ *
  * @param str Input stringstream.
  * @param path Path to write data to.
  * @return stringstream.
@@ -42,14 +44,24 @@ namespace REGoth
 
       // Define engine options
       options.add_options()
-        ("a,game-assets", "Path to a Gothic or Gothic 2 installation", cxxopts::value<bs::Path>(assetsPath), "[PATH]")
+        ("a,game-assets", "Path to a Gothic or Gothic 2 installation", cxxopts::value<bs::Path>(originalAssetsPath), "[PATH]")
         ("video-x-res", "X resolution", cxxopts::value<unsigned int>(resolutionX), "[PX]")
         ("video-y-res", "Y resolution", cxxopts::value<unsigned int>(resolutionY), "[PX]")
-        ("video-fullscreen", "Run in fullscreen mode", cxxopts::value<bool>(fullscreen))
+        ("video-fullscreen", "Run in fullscreen mode", cxxopts::value<bool>(isFullscreen))
         ;
 
       // Allow game-assets to also be a positional
       options.parse_positional({"game-assets"});
+    }
+
+    void verifyCLIEngineOptions()
+    {
+      // Resolve paths.
+      engineExecutablePath.makeAbsolute(bs::FileSystem::getWorkingDirectoryPath());
+      originalAssetsPath.makeAbsolute(bs::FileSystem::getWorkingDirectoryPath());
+
+      // TODO: Verify that assetsPath is a valid Gothic or Gothic 2 installation.
+      // TODO: Info whether assetsPath points to Gothic or Gothic 2 could be helpful. How to determine?
     }
 
     virtual void registerCLIOptions(cxxopts::Options& /* options */)
@@ -57,12 +69,17 @@ namespace REGoth
       // pass
     }
 
+    virtual void verifyCLIOptions()
+    {
+      // pass
+    }
+
     unsigned int verbosity = 0;
-    bs::Path gameExecutable;
-    bs::Path assetsPath;
+    bs::Path engineExecutablePath;
+    bs::Path originalAssetsPath;
     unsigned int resolutionX = 1280;
     unsigned int resolutionY = 768;
-    bool fullscreen = false;
+    bool isFullscreen = false;
 
   };
 
@@ -177,6 +194,13 @@ namespace REGoth
      */
     void shutdown();
 
+    /**
+     * Gets the engine's configuration.
+     *
+     * @return Engine configuration data structure.
+     */
+    virtual const EngineConfig& config();
+
   protected:
 
     /**
@@ -189,16 +213,28 @@ namespace REGoth
      */
     bs::SPtr<EngineContent> mEngineContent;
 
-  private:
-
     /**
      * Engine base configuration
      */
-    EngineConfig mConfig;
+    const EngineConfig mConfig;
 
   };
 
+  /**
+   * Parses the given command line arguments in argv to populate the given configuration object config.
+   *
+   * @param argc Main's argc.
+   * @param argv Main's argv.
+   * @param config Output parameter to populate with parsed options.
+   */
   void parseArguments(int argc, char** argv, EngineConfig& config);
+
+  /**
+   * Bootstrap and run the given engine.
+   *
+   * @param Engine object to run.
+   * @return Windows errorlevel / POSIX status code.
+   */
   int runEngine(REGothEngine& engine);
 
 }  // namespace REGoth

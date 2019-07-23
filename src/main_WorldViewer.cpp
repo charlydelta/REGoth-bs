@@ -22,8 +22,24 @@ public:
   virtual void registerCLIOptions(cxxopts::Options& opts) override
   {
     opts.add_options()
-      ("w,world", "World name to load", cxxopts::value<bs::String>(world), "[NAME]")
+      ("w,world", "Name of the world to load", cxxopts::value<bs::String>(world), "[NAME]")
       ;
+  }
+
+  virtual void verifyCLIOptions() override
+  {
+    // Make sure that world is set.
+    if (world.empty())
+    {
+      REGOTH_THROW(InvalidStateException, "World cannot be empty.");
+    }
+
+    // Unify possible inputs.
+    bs::StringUtil::toUpperCase(world);
+    if (not bs::StringUtil::endsWith(world, ".ZEN"))
+    {
+      world += ".ZEN";
+    }
   }
 
   bs::String world;
@@ -33,7 +49,12 @@ public:
 class REGothWorldViewer : public REGoth::REGothEngine
 {
 public:
-  REGothWorldViewer(const Config& config) : REGoth::REGothEngine(config), mConfig{config} {}
+  REGothWorldViewer(const Config& config) : REGoth::REGothEngine(config) {}
+
+  const Config& config() override
+  {
+    return static_cast<const Config&>(mConfig);
+  }
 
   void loadModPackages(const REGoth::OriginalGameFiles& files) override
   {
@@ -62,26 +83,14 @@ public:
   {
     using namespace REGoth;
 
-    if (mConfig.world.empty())
-    {
-      REGOTH_THROW(InvalidStateException, "World cannot be empty.");
-    }
-
-    bs::String worldName = mConfig.world;
-    bs::StringUtil::toUpperCase(worldName);
-    if (not bs::StringUtil::endsWith(worldName, ".ZEN"))
-    {
-      worldName += ".ZEN";
-    }
-
-    const bs::String SAVEGAME = "WorldViewer-" + worldName;
+    const bs::String SAVEGAME = "WorldViewer-" + config().world;
 
     bs::HPrefab worldPrefab = GameWorld::load(SAVEGAME);
     HGameWorld world;
 
     if (!worldPrefab)
     {
-      world = GameWorld::importZEN(worldName);
+      world = GameWorld::importZEN(config().world);
 
       HCharacter hero = world->insertCharacter("PC_HERO", "START");
       hero->useAsHero();
@@ -117,10 +126,6 @@ public:
 protected:
 
   REGoth::HThirdPersonCamera mThirdPersonCamera;
-
-private:
-
-  Config mConfig;
 
 };
 

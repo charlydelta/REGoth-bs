@@ -16,8 +16,9 @@
 
 class REGothCharacterMovementTester : public REGoth::REGothEngine
 {
-public:  
-  REGothCharacterMovementTester(const REGoth::EngineConfig& config) : REGoth::REGothEngine(config) {}
+public:
+
+  using REGoth::REGothEngine::REGothEngine;
 
   void setupMainCamera() override
   {

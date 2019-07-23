@@ -20,7 +20,8 @@
 class REGothWorldCacheTest : public REGoth::REGothEngine
 {
 public:
-  REGothWorldCacheTest(const REGoth::EngineConfig& config) : REGoth::REGothEngine(config) {}
+
+  using REGoth::REGothEngine::REGothEngine;
 
   void setupMainCamera() override
   {

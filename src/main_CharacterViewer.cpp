@@ -28,7 +28,8 @@
 class REGothCharacterViewer : public REGoth::REGothEngine
 {
 public:
-  REGothCharacterViewer(const REGoth::EngineConfig& config) : REGoth::REGothEngine(config) {}
+
+  using REGoth::REGothEngine::REGothEngine;
 
   void setupMainCamera() override
   {

@@ -10,7 +10,8 @@
 class REGothScriptTester : public REGoth::REGothEngine
 {
 public:
-  REGothScriptTester(const REGoth::EngineConfig& config) : REGoth::REGothEngine(config) {}
+
+  using REGoth::REGothEngine::REGothEngine;
 
   void setupMainCamera() override
   {
