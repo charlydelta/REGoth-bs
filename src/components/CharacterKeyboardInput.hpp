@@ -42,9 +42,15 @@ namespace REGoth
      */
     bs::VirtualButton mMoveForward;
     bs::VirtualButton mMoveBack;
-    bs::VirtualButton mMoveLeft;
-    bs::VirtualButton mMoveRight;
+    bs::VirtualButton mTurnLeft;
+    bs::VirtualButton mTurnRight;
+    bs::VirtualButton mStrafeLeft;
+    bs::VirtualButton mStrafeRight;
     bs::VirtualButton mFastMove;
+    bs::VirtualButton mToggleWalking;
+    bs::VirtualButton mToggleSneaking;
+    bs::VirtualButton mToggleMeleeWeapon;
+    bs::VirtualButton mJump;
     bs::VirtualButton mAction;
     bs::VirtualButton mQuickSave;
 

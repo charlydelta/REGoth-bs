@@ -12,7 +12,8 @@ namespace REGoth
 {
   class RTTI_VisualSkeletalAnimation;
   class NodeVisuals;
-  using HNodeVisuals = bs::GameObjectHandle<NodeVisuals>;
+  using HNodeVisuals    = bs::GameObjectHandle<NodeVisuals>;
+  using HZAnimationClip = BsZenLib::Res::HZAnimation;
 
   /**
    * Component for rendering an object animated using skeletal animation (Player, NPC, Monster).
@@ -87,6 +88,15 @@ namespace REGoth
     bs::Vector3 resolveFrameRootMotion();
 
     /**
+     * @return True, if the main animation has the "Idle"-flag set.
+     *
+     * An Animation that is flagged as "Idle" will only do slight movements
+     * which can be simply turned off when viewed from far away. This is only
+     * for optimizing the performance.
+     */
+    bool isPlayingIdleAnimation() const;
+
+    /**
      * @return The bounds of the underlaying renderable
      */
     bs::Bounds getBounds() const;
@@ -99,12 +109,12 @@ namespace REGoth
      *
      * @return Animation clip for the given animation name. Invalid if not found.
      */
-    bs::HAnimationClip findAnimationClip(const bs::String& name) const;
+    HZAnimationClip findAnimationClip(const bs::String& name) const;
 
     /**
      * Plays the given animation clip.
      */
-    void playAnimation(bs::HAnimationClip clip);
+    void playAnimationClip(HZAnimationClip clip);
 
     /**
      * Searches for the default idle animation for this character and plays it.
@@ -119,18 +129,30 @@ namespace REGoth
     void playDefaultIdleAnimation();
 
     /**
-     * Tries to transition to the given animation name.
+     * Finds the correct animation to play now which will get the visual from the
+     * state it is currently in into the given target state.
      *
-     * @param  Animation to transition to, eg `S_RUNL` or `T_JUMPB`.
+     * For example, given the visual is currently in state `S_RUN` and is requested
+     * to got to state `S_RUNL`, then this method will return `T_RUN_2_RUNL`.
      *
-     * @return true, if the transition was possible.
+     * If there is no valid transition animation for going into the requested target
+     * state, an empty string is returned. This means it's impossible for the visual
+     * right now to go to that state, e.g. because it's falling and needs to land first.
+     *
+     * Some animations do not need any transitions, or maybe no animation is currently
+     * being played, for which the target states animation name is returned.
+     *
+     * @return Name of the animation to play to reach the given state. Empty string
+     *         if the transition is not possible.
      */
-    bool tryPlayTransitionAnimationTo(const bs::String& state);
+    bs::String findAnimationToTransitionTo(const bs::String& stateAnim) const;
+    bs::String findAnimationToTransitionTo(const bs::String& fromAnim,
+                                           const bs::String& toAnim) const;
 
     /**
      * @return Whether the given animation is currently playing
      */
-    bool isAnimationPlaying(bs::HAnimationClip clip) const;
+    bool isAnimationPlaying(HZAnimationClip clip) const;
 
     /**
      * @return Name of the currently playing animation. Empty string if none.
@@ -161,7 +183,6 @@ namespace REGoth
     void setDebugAnimationSpeedFactor(float factor);
 
   protected:
-
     void onInitialized() override;
 
     /**
@@ -206,9 +227,8 @@ namespace REGoth
     void throwIfNotReadyForRendering() const;
 
   private:
-
     /**
-     * Fills mAnimationClips.
+     * Fills mAnimations.
      */
     void createAnimationMap();
 
@@ -216,25 +236,6 @@ namespace REGoth
      * @return Whether the given mesh is registered inside the currently set model script
      */
     bool isMeshRegisteredInModelScript(BsZenLib::Res::HMeshWithMaterials mesh);
-
-    /**
-     * Finds the correct animation to play now which will get the visual from the
-     * state it is currently in into the given target state.
-     *
-     * For example, given the visual is currently in state `S_RUN` and is requested
-     * to got to state `S_RUNL`, then this method will return `T_RUN_2_RUNL`.
-     *
-     * If there is no valid transition animation for going into the requested target
-     * state, an empty string is returned. This means it's impossible for the visual
-     * right now to go to that state, e.g. because it's falling and needs to land first.
-     *
-     * Some animations do not need any transitions, or maybe no animation is currently
-     * being played, for which the target states animation name is returned.
-     *
-     * @return Name of the animation to play to reach the given state. Empty string
-     *         if the transition is not possible.
-     */
-    bs::String findAnimationToTransitionToState(const bs::String& state);
 
     /**
      * Deletes all sub objects created by this component (ie. for rendering)
@@ -275,12 +276,12 @@ namespace REGoth
      * Whether the given clip should be played as looping. If not, it will likely
      * switch to a different animation when it's done.
      */
-    bool isClipLooping(bs::HAnimationClip clip);
+    bool isClipLooping(HZAnimationClip clip) const;
 
     /**
      * @return Layer the clip should be played on.
      */
-    bs::INT32 getClipLayer(bs::HAnimationClip clip);
+    bs::UINT32 getClipLayer(HZAnimationClip clip) const;
 
     // Configuration ----------------------------------------------------------
 
@@ -295,15 +296,18 @@ namespace REGoth
     HNodeVisuals mSubNodeVisuals;   /**< The NodeVisuals-Component created inside a sub object */
 
     // Animation --------------------------------------------------------------
-    bs::Map<bs::String, bs::HAnimationClip> mAnimationClips; /**< Animation names -> clip */
+    bs::Map<bs::String, HZAnimationClip> mAnimationClips; /**< Animation names -> Clip */
     bs::HAnimationClip mRootMotionLastClip; /**< Last clip we got the root motion from */
     float mRootMotionLastTime = 0.0f; /**< Last time the animation was queried for root motion */
+
+    HZAnimationClip mPlayingMainAnimation; /**< Handle of the currently playing main animation. May
+                                              be invalid. */
 
   public:
     REGOTH_DECLARE_RTTI(VisualSkeletalAnimation)
 
   protected:
-    VisualSkeletalAnimation() = default; // For RTTI
+    VisualSkeletalAnimation() = default;  // For RTTI
   };
 
   using HVisualSkeletalAnimation = bs::GameObjectHandle<VisualSkeletalAnimation>;

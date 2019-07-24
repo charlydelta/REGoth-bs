@@ -23,6 +23,7 @@
 #include <components/Waynet.hpp>
 #include <components/Waypoint.hpp>
 #include <daedalus/DATFile.h>
+#include <log/logging.hpp>
 #include <original-content/VirtualFileSystem.hpp>
 
 class REGothCharacterViewer : public REGoth::REGothEngine
@@ -59,7 +60,7 @@ public:
 
     for (auto s : gVirtualFileSystem().listAllFiles())
     {
-      gDebug().logDebug(s);
+      REGOTH_LOG(Info, Uncategorized, s);
     }
 
     HGameWorld world = GameWorld::createEmpty();

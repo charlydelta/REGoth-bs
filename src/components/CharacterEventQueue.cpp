@@ -7,6 +7,7 @@
 #include <components/GameWorld.hpp>
 #include <components/VisualCharacter.hpp>
 #include <exception/Throw.hpp>
+#include <log/logging.hpp>
 #include <scripting/ScriptVMForGameWorld.hpp>
 
 namespace REGoth
@@ -135,8 +136,8 @@ namespace REGoth
         break;
 
       default:
-        bs::gDebug().logWarning("[CharacterEventQueue] Unhandled Event Type: " +
-                                bs::toString((int)message->messageType));
+        REGOTH_LOG(Warning, Uncategorized, "[CharacterEventQueue] Unhandled Event Type: {0}",
+                   (int)message->messageType);
         done = true;
         break;
     }
@@ -174,12 +175,12 @@ namespace REGoth
     switch ((AI::WeaponMessage::WeaponSubType)message.subType)
     {
       case AI::WeaponMessage::ST_ChooseWeapon:
-        mCharacterAI->setWeaponMode(message.targetMode);
+        mCharacterAI->changeWeaponMode(message.targetMode);
         isDone = true;
         break;
       default:
-        bs::gDebug().logWarning("[CharacterEventQueue] Unhandled WeaponMode-Sub Type: " +
-                                bs::toString((int)message.subType));
+        REGOTH_LOG(Warning, Uncategorized,
+                   "[CharacterEventQueue] Unhandled WeaponMode-Sub Type: {0}", (int)message.subType);
         isDone = true;
         break;
     }
@@ -229,13 +230,14 @@ namespace REGoth
         break;
 
       case AI::MovementMessage::ST_SetWalkMode:
-        mCharacterAI->setWalkMode(message.walkMode);
+        mCharacterAI->changeWalkMode(message.walkMode);
         isDone = true;
         break;
 
       default:
-        bs::gDebug().logWarning("[CharacterEventQueue] Unhandled MovementMessage-Sub Type: " +
-                                bs::toString((int)message.subType));
+        REGOTH_LOG(Warning, Uncategorized,
+                   "[CharacterEventQueue] Unhandled MovementMessage-Sub Type: {0}",
+                   (int)message.subType);
         isDone = true;
         break;
     }
@@ -312,6 +314,9 @@ namespace REGoth
         break;
 
       default:
+        REGOTH_LOG(Warning, Uncategorized,
+                   "[CharacterEventQueue] Unhandled StateMessage-Sub Type: {0}",
+                   (int)message.subType);
         isDone = true;
         break;
     }
@@ -338,14 +343,15 @@ namespace REGoth
 
         if (message.isFirstRun)
         {
-          // bs::gDebug().logDebug(bs::StringUtil::format(
-          //     "[CharacterEventQueue] {0} - PlayAni start: {1}", SO()->getName(), message.animation));
+          // REGOTH_LOG(Info, Uncategorized, bs::StringUtil::format(
+          //     "[CharacterEventQueue] {0} - PlayAni start: {1}", SO()->getName(),
+          //     message.animation));
 
           message.playingClip = mVisualCharacter->findAnimationClip(message.animation);
 
           if (message.playingClip)
           {
-            mVisualCharacter->playAnimation(message.playingClip);
+            mVisualCharacter->playAnimationClip(message.playingClip);
           }
           else
           {
@@ -358,7 +364,7 @@ namespace REGoth
 
           if (isDone)
           {
-            // bs::gDebug().logDebug(
+            // REGOTH_LOG(Info, Uncategorized,
             //     bs::StringUtil::format("[CharacterEventQueue] {0} - PlayAni done: {1}",
             //                            SO()->getName(), message.animation));
           }
@@ -366,8 +372,9 @@ namespace REGoth
         break;
 
       default:
-        bs::gDebug().logWarning("[CharacterEventQueue] Unhandled Conversation-Sub Type: " +
-                                bs::toString((int)message.subType));
+        REGOTH_LOG(Warning, Uncategorized,
+                   "[CharacterEventQueue] Unhandled Conversation-Sub Type: {0}",
+                   (int)message.subType);
         isDone = true;
         break;
     }

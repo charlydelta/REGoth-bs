@@ -1,5 +1,6 @@
 #include "ScriptObject.hpp"
 #include <RTTI/RTTI_ScriptObject.hpp>
+#include <log/logging.hpp>
 
 namespace REGoth
 {
@@ -7,7 +8,7 @@ namespace REGoth
   {
     void debugLogScriptObject(const ScriptObject& object)
     {
-      bs::gDebug().logDebug("Dumping object of class: " + object.className);
+      REGOTH_LOG(Info, Uncategorized, "Dumping object of class: {0}", object.className);
 
       for (const auto& ints : object.ints)
       {
@@ -19,7 +20,7 @@ namespace REGoth
           line += bs::toString(v) + " ";
         }
 
-        bs::gDebug().logDebug(bs::StringUtil::format(" - {0} : {1} = {2}", ints.first, "int", line));
+        REGOTH_LOG(Info, Uncategorized, " - {0} : {1} = {2}", ints.first, "int", line);
       }
 
       for (const auto& floats : object.floats)
@@ -32,8 +33,7 @@ namespace REGoth
           line += bs::toString(v) + " ";
         }
 
-        bs::gDebug().logDebug(
-            bs::StringUtil::format(" - {0} : {1} = {2}", floats.first, "int", line));
+        REGOTH_LOG(Info, Uncategorized, " - {0} : {1} = {2}", floats.first, "int", line);
       }
 
       for (const auto& strings : object.strings)
@@ -46,19 +46,17 @@ namespace REGoth
           line += "'" + v + "' ";
         }
 
-        bs::gDebug().logDebug(
-            bs::StringUtil::format(" - {0} : {1} = {2}", strings.first, "string", line));
+        REGOTH_LOG(Info, Uncategorized, " - {0} : {1} = {2}", strings.first, "string", line);
       }
 
       for (const auto& ints : object.functionPointers)
       {
         const auto& value = ints.second;
 
-        bs::gDebug().logDebug(
-            bs::StringUtil::format(" - {0} : {1} = {2}", ints.first, "function", value));
+        REGOTH_LOG(Info, Uncategorized, " - {0} : {1} = {2}", ints.first, "function", value);
       }
 
-      bs::gDebug().logDebug("");
+      REGOTH_LOG(Info, Uncategorized, "");
     }
 
     REGOTH_DEFINE_RTTI(ScriptObject)

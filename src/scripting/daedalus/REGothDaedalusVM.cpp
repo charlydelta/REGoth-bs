@@ -5,6 +5,7 @@
 #include <RTTI/RTTI_REGothDaedalusVM.hpp>
 #include <daedalus/DATFile.h>
 #include <exception/Throw.hpp>
+#include <log/logging.hpp>
 
 namespace REGoth
 {
@@ -750,7 +751,7 @@ namespace REGoth
           {
             auto& sym = mScriptSymbols.getSymbol<SymbolExternalFunction>(opcode.symbol);
 
-            // bs::gDebug().logDebug("[REGothDaedalusVM] External not implemented: " + sym.name);
+            // REGOTH_LOG(Info, Uncategorized, "[REGothDaedalusVM] External not implemented: " + sym.name);
 
             // Put a dummy value onto the stack to get deterministic results
             switch (sym.returnType)
@@ -823,7 +824,18 @@ namespace REGoth
       }
       else
       {
-        return mStack.popFloat();
+        bs::INT32 asInt = popIntValue();
+
+        // TODO: Daedalus bytecode uses PushInt to push floats encoded as integers.
+        //       Since REGoth has it's own stack for floats, this is a problem!
+        //       We also cannot just scrap the float-stack and put everything onto
+        //       the integer stack instead, as that would not work with float-variables!
+        //       Maybe we should just scrap the notion of "float" alltogether and encode them as
+        //       integers all the time.
+        //
+        //       Luckily, floats are only rarely used. 
+        return *reinterpret_cast<float*>(&asInt);
+        //return mStack.popFloat();
       }
     }
 
@@ -1018,9 +1030,9 @@ namespace REGoth
                                              const bs::String& lhs, const bs::String& rhs,
                                              const bs::String& res)
     {
-      bs::gDebug().logDebug(
-          bs::StringUtil::format("[DaedalusVM] Exec: {0}{1}", makeCallDepthString(mCallDepth),
-                                 disassembleOpcode(opcode, mScriptSymbols, lhs, rhs, res)));
+      REGOTH_LOG(Info, Uncategorized,
+             bs::StringUtil::format("[DaedalusVM] Exec: {0}{1}", makeCallDepthString(mCallDepth),
+                                    disassembleOpcode(opcode, mScriptSymbols, lhs, rhs, res)));
     }
 
     void DaedalusVM::findFunctionAtAddressAndLog(bs::UINT32 address)
@@ -1039,8 +1051,9 @@ namespace REGoth
         name = fnSymbol.name;
       }
 
-      bs::gDebug().logDebug(bs::StringUtil::format("[DaedalusVM] Exec: {0}Call {1}",
-                                                   makeCallDepthString(mCallDepth), name));
+      REGOTH_LOG(Info, Uncategorized,
+             bs::StringUtil::format("[DaedalusVM] Exec: {0}Call {1}",
+                                    makeCallDepthString(mCallDepth), name));
     }
 
     REGOTH_DEFINE_RTTI(DaedalusVM);

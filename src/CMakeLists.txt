@@ -12,7 +12,7 @@ add_library(samples-common
 target_include_directories(samples-common PUBLIC common)
 target_link_libraries(samples-common PUBLIC bsf)
 
-add_library(REGothEngine
+add_library(REGothEngine STATIC
   REGothEngine.hpp
   REGothEngine.cpp
   components/AnchoredTextLabels.h
@@ -162,8 +162,14 @@ target_link_libraries(REGothEngine PUBLIC ${OpenMP_CXX_LIBRARIES})
 target_link_libraries(REGothEngine PUBLIC cxxopts)
 target_include_directories(REGothEngine PUBLIC .)
 
-add_executable(REGoth main.cpp)
-target_link_libraries(REGoth REGothEngine samples-common)
+# Let CMake take care of the __declspec nonsense on windows.
+set_target_properties(REGothEngine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE) 
+
+# Make sure our calls to BS_LOG work
+target_compile_definitions(REGothEngine PUBLIC -DBS_LOG_VERBOSITY=LogVerbosity::Log)
+
+# add_executable(REGoth main.cpp)
+# target_link_libraries(REGoth REGothEngine samples-common)
 
 add_executable(REGothCharacterViewer main_CharacterViewer.cpp)
 target_link_libraries(REGothCharacterViewer REGothEngine samples-common)

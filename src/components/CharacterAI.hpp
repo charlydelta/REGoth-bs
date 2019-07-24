@@ -65,6 +65,7 @@ namespace REGoth
     bool turnRight();
     bool stopTurning();
     bool doAction();
+    bool jump();
 
     /**
      * Determines whether the character is allowed to switch to an other animation state,
@@ -147,15 +148,47 @@ namespace REGoth
 
     /**
      * Sets how this character should move, like walking, running, sneaking.
+     *
+     * @return Whether the state change was possible
      */
-    void setWalkMode(AI::WalkMode walkMode);
+    bool changeWalkMode(AI::WalkMode walkMode);
+
+    /**
+     * Functionality attached to the "Toggle Walking"-Button (Shift in the original
+     * game by default). Toggling between running and walking is only possible if
+     * the character is currently not swimming, diving or some other state that is
+     * not "on foot". If the current state is neither Running, nor Walking, the
+     * Running state is entered.
+     */
+    void tryToggleWalking();
+
+    /**
+     * Functionality attached to the "Toggle Sneak"-Button.
+     * Toggling between running and walking is only possible if the character is
+     * currently not swimming, diving or some other state that is not "on foot".
+     * If the current state is neither Running, nor Sneaking, the Running state
+     * is entered.
+     */
+    void tryToggleSneaking();
+
+    /**
+     * Functionality attached to the "Toggle Melee Weapon"-Button (1 in the original
+     * game). If no weapon is equipped, this will make the character go into fist mode.
+     */
+    void tryToggleMeleeWeapon();
 
     /**
      * Sets the kind of weapon this character should pull. Monsters need to have
      * this set to "fist" or they won't be able to move since all their animations
      * are for that mode only.
      */
-    void setWeaponMode(AI::WeaponMode mode);
+    bool changeWeaponMode(AI::WeaponMode mode);
+
+    /**
+     * @return Whether the character is currently standing and idling. Only possible during
+     *         the walkmodes "RUN" or "WALK".
+     */
+    bool isStanding() const;
 
   private:
     /**
@@ -193,6 +226,15 @@ namespace REGoth
      */
     void handleTurning();
 
+    /**
+     * Tries to transition to the given animation name.
+     *
+     * @param  Animation to transition to, eg `S_RUNL` or `T_JUMPB`.
+     *
+     * @return true, if the transition was possible.
+     */
+    bool tryPlayTransitionAnimationTo(const bs::String& state);
+
     // Visual attached to this character
     HVisualCharacter mVisual;
     HGameWorld mWorld;
@@ -213,6 +255,9 @@ namespace REGoth
 
     // Whether Physics is being processed for this character
     bool mIsPhysicsActive = true;
+
+    // Whether this character is standing on solid ground, like the world mesh or a static vob
+    bool isStandingOnSolidGround = false;
 
     // Whether the character is running, sneaking, etc
     AI::WalkMode mWalkMode = AI::WalkMode::Run;

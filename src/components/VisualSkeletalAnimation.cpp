@@ -11,6 +11,7 @@
 #include <animation/StateNaming.hpp>
 #include <components/NodeVisuals.hpp>
 #include <exception/Throw.hpp>
+#include <log/logging.hpp>
 #include <original-content/OriginalGameResources.hpp>
 
 namespace REGoth
@@ -70,9 +71,9 @@ namespace REGoth
       REGOTH_THROW(InvalidStateException, "No model script set!");
     }
 
-    for (bs::HAnimationClip clip : mModelScript->getAnimationClips())
+    for (auto anim : mModelScript->getAnimations())
     {
-      mAnimationClips[clip->getName()] = clip;
+      mAnimationClips[anim->getName()] = anim;
     }
   }
 
@@ -245,37 +246,35 @@ namespace REGoth
     bs::AnimationClipState state;
     mSubAnimation->getState(clip, state);
 
-    if (command == "PLAYCLIP")
+    if (command == "STOP")
+    {
+      playAnimationClip({});
+    }
+    else if (command == "PLAYCLIP")
     {
       // gDebug().logDebug("[VisualSkeletalAnimation] " + SO()->getName() + " - " + clip->getName() +
       //                   ": event PLAYCLIP: " + action);
 
-      HAnimationClip clip = findAnimationClip(action);
+      auto clip = findAnimationClip(action);
 
       if (clip)
       {
-        playAnimation(clip);
+        playAnimationClip(clip);
       }
       else
       {
-        gDebug().logWarning("[VisualSkeletalAnimation] Unknown next animation: " + action);
+        REGOTH_LOG(Warning, Uncategorized, "[VisualSkeletalAnimation] Unknown next animation: {0}",
+                   action);
       }
-    }
-    else if (command == "LOOP")
-    {
-      // Handled when the animation was started by setting the animation wrapmode to "loop"
-    }
-    else if (command == "LAYER")
-    {
-      // Handled when the animation was started
     }
     else
     {
-      gDebug().logWarning("[VisualSkeletalAnimation] Unknown animation event: " + string);
+      REGOTH_LOG(Warning, Uncategorized, "[VisualSkeletalAnimation] Unknown animation event: {0}",
+                 string);
     }
   }
 
-  void VisualSkeletalAnimation::playAnimation(bs::HAnimationClip clip)
+  void VisualSkeletalAnimation::playAnimationClip(HZAnimationClip clip)
   {
     using namespace bs;
 
@@ -296,21 +295,26 @@ namespace REGoth
 
       if (layer > 0)
       {
-        // bs::gDebug().logDebug(bs::StringUtil::format(
+        // REGOTH_LOG(Info, Uncategorized, bs::StringUtil::format(
         //     "[VisualSkeletalAnimation] Layered animation {1} not implemented", clip->getName()));
 
         // Commented out: Doesn't work yet
         // mSubAnimation->blendAdditive(clip, 1.0f, 0.0f, (bs::UINT32)layer);
+        mSubAnimation->play(clip->mClip);
+
+        // TODO: Once blending is implemented, these won't be the main animation clips anymore
+        mPlayingMainAnimation = clip;
       }
       else
       {
-        mSubAnimation->play(clip);
+        mSubAnimation->play(clip->mClip);
+        mPlayingMainAnimation = clip;
       }
     }
     else
     {
-      bs::gDebug().logDebug("Stop");
       mSubAnimation->stopAll();
+      mPlayingMainAnimation = {};
     }
   }
 
@@ -320,17 +324,17 @@ namespace REGoth
 
     for (auto anim : possibleAnims)
     {
-      bs::HAnimationClip clip = findAnimationClip(anim);
+      auto clip = findAnimationClip(anim);
 
       if (clip)
       {
-        playAnimation(clip);
+        playAnimationClip(clip);
         return;
       }
     }
 
     // No animation found, stop all animations instead
-    playAnimation({});
+    playAnimationClip({});
   }
 
   bs::Vector<bs::String> VisualSkeletalAnimation::listPossibleDefaultAnimations() const
@@ -338,60 +342,39 @@ namespace REGoth
     return {};
   }
 
-  bool VisualSkeletalAnimation::tryPlayTransitionAnimationTo(const bs::String& state)
+  bs::String VisualSkeletalAnimation::findAnimationToTransitionTo(const bs::String& stateAnim) const
   {
-    throwIfNotReadyForRendering();
+    bs::String stateNow = getStateFromPlayingAnimation();
 
-    bs::String animToPlay   = findAnimationToTransitionToState(state);
-    bs::HAnimationClip clip = findAnimationClip(animToPlay);
-
-    // If there is no clip, then the transition isn't meant to be possible
-    // That also includes the empty string.
-    if (!clip)
+    // getStateFromPlayingAnimation returns a string without the leading S_
+    if (!stateNow.empty())
     {
-      return false;
+      stateNow = "S_" + stateNow;
     }
 
-    if (!isAnimationPlaying(clip))
-    {
-      playAnimation(clip);
-    }
-
-    return true;
+    return findAnimationToTransitionTo(stateNow, stateAnim);
   }
 
-  bs::String VisualSkeletalAnimation::findAnimationToTransitionToState(const bs::String& state)
+  bs::String VisualSkeletalAnimation::findAnimationToTransitionTo(const bs::String& fromAnim,
+                                                                  const bs::String& toAnim) const
   {
     // No animation being played should not happen during normal operation, but if it does,
     // don't hang up the visual here. I've only see this happen after deserialization but that
     // might have been an other issue.
     if (!mSubAnimation->isPlaying())
     {
-      return state;
+      return toAnim;
     }
 
     // Some animations are directly reachable, like S_RUN -> T_JUMPB. Whether the transition makes
     // sense has to be checked elsewhere.
-    if (!AnimationState::isTransitionNeeded(state))
+    if (!AnimationState::isTransitionNeeded(toAnim))
     {
-      return state;
+      return toAnim;
     }
 
-    bs::String from = getStateFromPlayingAnimation();
-
-    // Can't transition if not currently in any state. Might be inside a transition.
-    if (from.empty())
-    {
-      return "";
-    }
-
-    bs::String to = AnimationState::getStateName(state);
-
-    // Target animation is not a state name?
-    if (to.empty())
-    {
-      return "";
-    }
+    bs::String from = AnimationState::getStateName(fromAnim);
+    bs::String to   = AnimationState::getStateName(toAnim);
 
     bs::String transition =
         AnimationState::constructTransitionAnimationName(AI::WeaponMode::None, from, to);
@@ -405,7 +388,7 @@ namespace REGoth
     return transition;
   }
 
-  bs::HAnimationClip VisualSkeletalAnimation::findAnimationClip(const bs::String& name) const
+  HZAnimationClip VisualSkeletalAnimation::findAnimationClip(const bs::String& name) const
   {
     using namespace bs;
 
@@ -418,7 +401,7 @@ namespace REGoth
     return result->second;
   }
 
-  bool VisualSkeletalAnimation::isAnimationPlaying(bs::HAnimationClip clip) const
+  bool VisualSkeletalAnimation::isAnimationPlaying(HZAnimationClip clip) const
   {
     throwIfNotReadyForRendering();
 
@@ -516,14 +499,21 @@ namespace REGoth
         motion += AnimationState::getRootMotionSince(clipNow, then, now);
       }
 
-      // bs::gDebug().logDebug(bs::StringUtil::format("RootMotion {0} -> {1}: {2}", then, now,
-      // bs::toString(motion)));
+      // REGOTH_LOG(Info, Uncategorized, bs::StringUtil::format("RootMotion {0} -> {1}: {2}",
+      // then, now, bs::toString(motion)));
     }
 
     mRootMotionLastTime = state.time;
     mRootMotionLastClip = clipNow;
 
     return motion;
+  }
+
+  bool VisualSkeletalAnimation::isPlayingIdleAnimation() const
+  {
+    if (!mPlayingMainAnimation) return false;
+
+    return mPlayingMainAnimation->mIsIdleAnimation;
   }
 
   void VisualSkeletalAnimation::addDefaultAttachments()
@@ -536,36 +526,14 @@ namespace REGoth
     }
   }
 
-  bool VisualSkeletalAnimation::isClipLooping(bs::HAnimationClip clip)
+  bool VisualSkeletalAnimation::isClipLooping(HZAnimationClip clip) const
   {
-    // If the clip is supposed to loop, it will have a "LOOP" event at its very end.
-    // Since it makes no sense to have multiple "LOOP" events in there, we just
-    // check whether one exists at all and don't care about the time.
-    for (const auto& event : clip->getEvents())
-    {
-      if (event.name == "LOOP")
-      {
-        return true;
-      }
-    }
-
-    return false;
+    return clip->mIsLooping;
   }
 
-  bs::INT32 VisualSkeletalAnimation::getClipLayer(bs::HAnimationClip clip)
+  bs::UINT32 VisualSkeletalAnimation::getClipLayer(HZAnimationClip clip) const
   {
-    // The layer is encoded as a simple event. The time it fires doesn't matter.
-    for (const auto& event : clip->getEvents())
-    {
-      if (bs::StringUtil::startsWith(event.name, "LAYER:", false))
-      {
-        bs::String nr = event.name.substr(6);
-
-        return bs::parseINT32(nr);
-      }
-    }
-
-    return 0;
+    return clip->mLayer;
   }
 
   void VisualSkeletalAnimation::setDebugAnimationSpeedFactor(float factor)

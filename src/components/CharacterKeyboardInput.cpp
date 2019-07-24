@@ -1,10 +1,11 @@
 #include "CharacterKeyboardInput.hpp"
-#include <components/GameWorld.hpp>
 #include <RTTI/RTTI_CharacterKeyboardInput.hpp>
 #include <components/Character.hpp>
 #include <components/CharacterAI.hpp>
 #include <components/CharacterEventQueue.hpp>
+#include <components/GameWorld.hpp>
 #include <exception/Throw.hpp>
+#include <log/logging.hpp>
 
 namespace REGoth
 {
@@ -23,13 +24,19 @@ namespace REGoth
   {
     bs::Component::onInitialized();
 
-    mMoveForward = bs::VirtualButton("Forward");
-    mMoveBack    = bs::VirtualButton("Back");
-    mMoveLeft    = bs::VirtualButton("Left");
-    mMoveRight   = bs::VirtualButton("Right");
-    mFastMove    = bs::VirtualButton("FastMove");
-    mAction      = bs::VirtualButton("Action");
-    mQuickSave   = bs::VirtualButton("QuickSave");
+    mMoveForward       = bs::VirtualButton("MoveForward");
+    mMoveBack          = bs::VirtualButton("MoveBack");
+    mStrafeLeft        = bs::VirtualButton("StrafeLeft");
+    mStrafeRight       = bs::VirtualButton("StrafeRight");
+    mTurnLeft          = bs::VirtualButton("TurnLeft");
+    mTurnRight         = bs::VirtualButton("TurnRight");
+    mFastMove          = bs::VirtualButton("FastMove");
+    mToggleWalking     = bs::VirtualButton("ToggleWalking");
+    mToggleSneaking    = bs::VirtualButton("ToggleSneaking");
+    mToggleMeleeWeapon = bs::VirtualButton("ToggleMeleeWeapon");
+    mJump              = bs::VirtualButton("Jump");
+    mAction            = bs::VirtualButton("Action");
+    mQuickSave         = bs::VirtualButton("QuickSave");
 
     mCharacter = SO()->getComponent<Character>();
 
@@ -76,11 +83,31 @@ namespace REGoth
 
         auto eventQueue = c->SO()->getComponent<CharacterEventQueue>();
 
-        bs::gDebug().logDebug("[CharacterKeyboardInput] Talk to: " + c->SO()->getName());
+        REGOTH_LOG(Info, Uncategorized, "[CharacterKeyboardInput] Talk to: {0}", c->SO()->getName());
         eventQueue->clear();  // FIXME: Find out what's blocking the new message
         eventQueue->pushTalkToCharacter(thisCharacter);
         break;
       }
+    }
+
+    if (bs::gVirtualInput().isButtonDown(mToggleWalking))
+    {
+      mCharacterAI->tryToggleWalking();
+    }
+
+    if (bs::gVirtualInput().isButtonDown(mToggleSneaking))
+    {
+      mCharacterAI->tryToggleSneaking();
+    }
+
+    if (bs::gVirtualInput().isButtonDown(mToggleMeleeWeapon))
+    {
+      mCharacterAI->tryToggleMeleeWeapon();
+    }
+
+    if (bs::gVirtualInput().isButtonDown(mJump))
+    {
+      mCharacterAI->jump();
     }
 
     if (bs::gVirtualInput().isButtonDown(mQuickSave))
@@ -91,42 +118,48 @@ namespace REGoth
 
   void CharacterKeyboardInput::fixedUpdate()
   {
-    bool goingForward = bs::gVirtualInput().isButtonHeld(mMoveForward);
-    bool goingBack    = bs::gVirtualInput().isButtonHeld(mMoveBack);
-    bool goingLeft    = bs::gVirtualInput().isButtonHeld(mMoveLeft);
-    bool goingRight   = bs::gVirtualInput().isButtonHeld(mMoveRight);
-    bool fastMove     = bs::gVirtualInput().isButtonHeld(mFastMove);
-
     // Always keep the user controllers physics active
     mCharacterAI->activatePhysics();
 
-    if (goingForward)
+    if (bs::gVirtualInput().isButtonHeld(mMoveForward))
     {
       mCharacterAI->goForward();
     }
-    else if (goingBack)
+    else if (bs::gVirtualInput().isButtonHeld(mMoveBack))
     {
       mCharacterAI->goBackward();
+    }
+    else if (bs::gVirtualInput().isButtonHeld(mStrafeLeft))
+    {
+      // FIXME: Should be strafeLeft, but has to be strafeRight here since the world is mirrored
+      mCharacterAI->strafeRight();
+    }
+    else if (bs::gVirtualInput().isButtonHeld(mStrafeRight))
+    {
+      // FIXME: Should be strafeRight, but has to be strafeLeft here since the world is mirrored
+      mCharacterAI->strafeLeft();
     }
     else
     {
       mCharacterAI->stopMoving();
     }
 
-    if (goingLeft)
+    if (bs::gVirtualInput().isButtonHeld(mTurnLeft))
     {
-      mCharacterAI->turnLeft();
-    }
-    else if (goingRight)
-    {
+      // FIXME: Should be turnLeft, but has to be turnRight here since the world is mirrored
       mCharacterAI->turnRight();
+    }
+    else if (bs::gVirtualInput().isButtonHeld(mTurnRight))
+    {
+      // FIXME: Should be turnRight, but has to be turnLeft here since the world is mirrored
+      mCharacterAI->turnLeft();
     }
     else
     {
       mCharacterAI->stopTurning();
     }
 
-    if (fastMove)
+    if (bs::gVirtualInput().isButtonHeld(mFastMove))
     {
       mCharacterAI->fastMove(4.0f);
     }

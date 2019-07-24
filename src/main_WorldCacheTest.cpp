@@ -9,13 +9,14 @@
 #include <Scene/BsPrefab.h>
 #include <Scene/BsSceneObject.h>
 #include <Utility/BsTimer.h>
+#include <components/GameWorld.hpp>
 #include <components/Item.hpp>
 #include <components/Waynet.hpp>
 #include <components/Waypoint.hpp>
 #include <daedalus/DATFile.h>
 #include <exception/Throw.hpp>
+#include <log/logging.hpp>
 #include <original-content/VirtualFileSystem.hpp>
-#include <components/GameWorld.hpp>
 
 class REGothWorldCacheTest : public REGoth::REGothEngine
 {
@@ -34,22 +35,24 @@ public:
   {
     using namespace REGoth;
 
-    const bs::String world = "OLDWORLD.ZEN";
+    const bs::String world    = "OLDWORLD.ZEN";
     const bs::String saveGame = "MySafeGame";
 
     if (!bs::FileSystem::exists(BsZenLib::GothicPathToCachedWorld(saveGame)))
     {
-      bs::gDebug().logDebug("[REGothWorldCacheTest] Importing and caching ZEN: " + world);
+      REGOTH_LOG(Info, Uncategorized, "[REGothWorldCacheTest] Importing and caching ZEN: {0}",
+                 world);
 
       HGameWorld gameWorld = GameWorld::importZEN(world);
 
-      bs::gDebug().logDebug("[REGothWorldCacheTest] Saving world...");
+      REGOTH_LOG(Info, Uncategorized, "[REGothWorldCacheTest] Saving world...");
 
       gameWorld->save(saveGame);
     }
     else
     {
-      bs::gDebug().logDebug("[REGothWorldCacheTest] Loading world from SaveGame: " + world);
+      REGOTH_LOG(Info, Uncategorized, "[REGothWorldCacheTest] Loading world from SaveGame: {0}",
+                 world);
 
       bs::HPrefab world = GameWorld::load(saveGame);
       world->instantiate();

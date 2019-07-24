@@ -16,6 +16,7 @@
 #include <components/Item.hpp>
 #include <components/Visual.hpp>
 #include <components/VisualStaticMesh.hpp>
+#include <log/logging.hpp>
 #include <zenload/zTypes.h>
 
 namespace
@@ -105,8 +106,8 @@ namespace REGoth
     // }
     else
     {
-      bs::gDebug().logWarning("[ImportSingleVob] Unsupported vob class: " +
-                              bs::String(vob.objectClass.c_str()));
+      REGOTH_LOG(Warning, Uncategorized, "[ImportSingleVob] Unsupported vob class: {0}",
+                 bs::String(vob.objectClass.c_str()));
 
       return {};
     }
@@ -182,7 +183,12 @@ namespace REGoth
     bs::HSceneObject so = import_zCVob(vob, bsfParent, gameWorld);
 
     // Startpoint is found by name of the scene object
-    bs::gDebug().logDebug("[ImportSingleVob] Found startpoint: " + so->getName());
+    REGOTH_LOG(Info, Uncategorized, "[ImportSingleVob] Found startpoint: {0}", so->getName());
+
+    // A startpoint has an arbitrary names, which makes it hard to find it at a later point.
+    // Thus, rename it to a known constant. As there should always only be one startpoint in
+    // a world, this should cause no conflicts.
+    so->setName(WORLD_STARTPOINT);
 
     return so;
   }
@@ -205,8 +211,8 @@ namespace REGoth
   {
     if (vob.oCItem.instanceName.empty())
     {
-      bs::gDebug().logWarning("[ImportSingleVob] Item with empty script instance: " +
-                              bs::String(vob.vobName.c_str()));
+      REGOTH_LOG(Warning, Uncategorized, "[ImportSingleVob] Item with empty script instance: {0}",
+                 bs::String(vob.vobName.c_str()));
       return {};
     }
 
@@ -287,7 +293,7 @@ namespace REGoth
 
     if (!hasAdded)
     {
-      bs::gDebug().logWarning("[ImportSingleVob] Unsupported visual: " + visualName);
+      REGOTH_LOG(Warning, Uncategorized, "[ImportSingleVob] Unsupported visual: {0}", visualName);
     }
   }
 
@@ -319,7 +325,8 @@ namespace REGoth
     }
     else
     {
-      bs::gDebug().logDebug("[ImportSingleVob] Caching physics mesh for " + mesh->getName());
+      REGOTH_LOG(Info, Uncategorized, "[ImportSingleVob] Caching physics mesh for {0}",
+                 mesh->getName());
 
       physicsMesh = bs::PhysicsMesh::create(meshData, bs::PhysicsMeshType::Triangle);
 

@@ -10,6 +10,7 @@
 #include <components/StoryInformation.hpp>
 #include <components/VisualCharacter.hpp>
 #include <exception/Throw.hpp>
+#include <log/logging.hpp>
 
 namespace REGoth
 {
@@ -100,6 +101,8 @@ namespace REGoth
       if (shouldDisablePhysics())
       {
         deactivatePhysics();
+
+        REGOTH_LOG(Info, Uncategorized, "[CharacterAI] Deactivate physics on {0}", SO()->getName());
       }
     }
     else
@@ -107,6 +110,8 @@ namespace REGoth
       if (shouldEnablePhysics())
       {
         activatePhysics();
+
+        REGOTH_LOG(Info, Uncategorized, "[CharacterAI]   Activate physics on {0}", SO()->getName());
       }
     }
   }
@@ -117,32 +122,48 @@ namespace REGoth
 
     bs::String anim = AnimationState::constructStateAnimationName(mWeaponMode, mWalkMode, "L");
 
-    return mVisual->tryPlayTransitionAnimationTo(anim);
+    return tryPlayTransitionAnimationTo(anim);
   }
 
   bool CharacterAI::goBackward()
   {
     if (!isStateSwitchAllowed()) return false;
 
-    return mVisual->tryPlayTransitionAnimationTo("T_JUMPB");
+    return tryPlayTransitionAnimationTo("T_JUMPB");
   }
 
   bool CharacterAI::strafeLeft()
   {
     if (!isStateSwitchAllowed()) return false;
 
-    // TODO: Implement
-
-    return true;
+    switch (mWalkMode)
+    {
+      case AI::WalkMode::Run:
+        return tryPlayTransitionAnimationTo("T_RUNSTRAFEL");
+      case AI::WalkMode::Walk:
+        return tryPlayTransitionAnimationTo("T_WALKSTRAFEL");
+      case AI::WalkMode::Sneak:
+        return tryPlayTransitionAnimationTo("T_SNEAKSTRAFEL");
+      default:
+        return false;
+    }
   }
 
   bool CharacterAI::strafeRight()
   {
     if (!isStateSwitchAllowed()) return false;
 
-    // TODO: Implement
-
-    return true;
+    switch (mWalkMode)
+    {
+      case AI::WalkMode::Run:
+        return tryPlayTransitionAnimationTo("T_RUNSTRAFER");
+      case AI::WalkMode::Walk:
+        return tryPlayTransitionAnimationTo("T_WALKSTRAFER");
+      case AI::WalkMode::Sneak:
+        return tryPlayTransitionAnimationTo("T_SNEAKSTRAFER");
+      default:
+        return false;
+    }
   }
 
   bool CharacterAI::turnLeft()
@@ -168,7 +189,13 @@ namespace REGoth
 
     bs::String anim = AnimationState::constructStateAnimationName(mWeaponMode, mWalkMode, "");
 
-    return mVisual->tryPlayTransitionAnimationTo(anim);
+    if (tryPlayTransitionAnimationTo(anim)) return true;
+
+    // The "STAND" state doesn't really exist but some animation reference it, like
+    // the animation "T_JUMP_2_STAND".
+    if (tryPlayTransitionAnimationTo("S_STAND")) return true;
+
+    return false;
   }
 
   bool CharacterAI::stopTurning()
@@ -181,6 +208,60 @@ namespace REGoth
   bool CharacterAI::doAction()
   {
     return true;
+  }
+
+  bool CharacterAI::jump()
+  {
+    if (!isStateSwitchAllowed()) return false;
+
+    return tryPlayTransitionAnimationTo("S_JUMP");
+  }
+
+  bool CharacterAI::tryPlayTransitionAnimationTo(const bs::String& state)
+  {
+    bs::String playingNow = mVisual->getPlayingAnimationName();
+    auto clipPlayingNow   = mVisual->findAnimationClip(playingNow);
+
+    bs::String animToPlay = mVisual->findAnimationToTransitionTo(state);
+    auto clip             = mVisual->findAnimationClip(animToPlay);
+
+    // Already in target state
+    if (clip == clipPlayingNow) return true;
+
+    // If there is no clip, then the transition isn't meant to be possible.
+    // That also includes the empty string.
+    if (!clip)
+    {
+      // However, some animations refer to a special "Stand" state, which doesn't exist
+      // but rather means the current idle animation, if the character is in running
+      // or walking mode.
+      if (isStanding())
+      {
+        animToPlay = mVisual->findAnimationToTransitionTo("S_STAND", state);
+        clip       = mVisual->findAnimationClip(animToPlay);
+      }
+    }
+
+    if (!clip) return false;
+
+    if (!mVisual->isAnimationPlaying(clip))
+    {
+      mVisual->playAnimationClip(clip);
+    }
+
+    return true;
+  }
+
+  bool CharacterAI::isStanding() const
+  {
+    bs::String currentAnimation = mVisual->getPlayingAnimationName();
+    bs::String currentState     = AnimationState::getStateName(currentAnimation);
+
+    if (currentState == "RUN") return true;
+
+    if (currentState == "WALK") return true;
+
+    return false;
   }
 
   bool CharacterAI::isStateSwitchAllowed()
@@ -250,24 +331,32 @@ namespace REGoth
       handleTurning();
     }
 
-    bs::Vector3 rootMotion = mVisual->resolveFrameRootMotion();
+    bs::Vector3 rootMotion = bs::Vector3::ZERO;
 
-    bs::Vector3 rootMotionRotated = SO()->getTransform().getRotation().rotate(rootMotion);
+    if (!mVisual->isPlayingIdleAnimation())
+    {
+      rootMotion = mVisual->resolveFrameRootMotion();
 
-    // For some reason this is inverted
-    rootMotionRotated *= -1.0;
+      // Rotate by the scene objects rotation
+      rootMotion = SO()->getTransform().getRotation().rotate(rootMotion);
 
-    // No need to multiply rootMotion by the frame delta since it is the actual movement since
-    // last time we queried it.
-    mCharacterController->move(rootMotionRotated);
+      // No need to multiply rootMotion by the frame delta since it is the actual movement since
+      // last time we queried it. For some reason this is inverted though.
+      rootMotion *= -1.0;
+    }
 
-    // Note: Gravity is acceleration, but since the walker doesn't support falling, just apply it as
-    // a velocity
-    // FIXME: Actual gravity!
-    const float frameDelta = bs::gTime().getFixedFrameDelta();
-    bs::Vector3 gravity    = bs::Vector3(0, -9.81, 0);  // gPhysics().getGravity();
+    if (!isStandingOnSolidGround || rootMotion.squaredLength() > 0)
+    {
+      // Note: Gravity is acceleration, but since the walker doesn't support falling, just apply it
+      // as a velocity FIXME: Actual gravity!
+      const float frameDelta = bs::gTime().getFixedFrameDelta();
+      bs::Vector3 gravity    = bs::Vector3(0, -9.81f, 0);  // gPhysics().getGravity();
 
-    mCharacterController->move(gravity * frameDelta);
+      auto flags = mCharacterController->move(rootMotion + gravity * frameDelta);
+
+      // TODO: Check if the character is standing on a dynamic object, which is NOT solid ground!
+      isStandingOnSolidGround = flags.isSet(bs::CharacterCollisionFlag::Down);
+    }
   }
 
   void CharacterAI::handleTurning()
@@ -281,11 +370,11 @@ namespace REGoth
         break;
 
       case TurnDirection::Left:
-        frameTurn = TURN_SPEED_NORMAL;
+        frameTurn = -TURN_SPEED_NORMAL;
         break;
 
       case TurnDirection::Right:
-        frameTurn = -TURN_SPEED_NORMAL;
+        frameTurn = TURN_SPEED_NORMAL;
         break;
     }
 
@@ -304,7 +393,8 @@ namespace REGoth
       // Usually we would throw here, but Gothic has some invalid waypoints inside it's scripts
       // so we would break the original games if we did that. Resort to a warning for those,
       // better than nothing, I guess.
-      bs::gDebug().logWarning("[CharacterAI] Teleport failed, waypoint doesn't exist: " + waypoint);
+      REGOTH_LOG(Warning, Uncategorized,
+                 "[CharacterAI] Teleport failed, waypoint doesn't exist: {0}", waypoint);
       return;
     }
 
@@ -360,14 +450,118 @@ namespace REGoth
   {
   }
 
-  void CharacterAI::setWalkMode(AI::WalkMode walkMode)
+  bool CharacterAI::changeWalkMode(AI::WalkMode walkMode)
   {
-    mWalkMode = walkMode;
+    bs::String stateTarget = AnimationState::constructStateAnimationName(mWeaponMode, walkMode, "");
+
+    bool wasAllowed = tryPlayTransitionAnimationTo(stateTarget);
+
+    if (wasAllowed)
+    {
+      mWalkMode = walkMode;
+    }
+
+    if (!wasAllowed)
+    {
+      // FIXME: We're missing some aniAliases, for example, "T_RUN_2_SNEAK" exists,
+      //        and "T_SNEAK_2_RUN" is just the same animation but in reverse. This
+      //        is defined using an aniAlias, which does not seem to be implemented.
+      auto c = mVisual->findAnimationClip(stateTarget);
+
+      if (c)
+      {
+        mVisual->playAnimationClip(c);
+        mWalkMode = walkMode;
+      }
+    }
+
+    return wasAllowed;
   }
 
-  void CharacterAI::setWeaponMode(AI::WeaponMode mode)
+  bool CharacterAI::changeWeaponMode(AI::WeaponMode mode)
   {
-    mWeaponMode = mode;
+    bs::String stateTarget = AnimationState::constructStateAnimationName(mode, mWalkMode, "");
+
+    bool wasAllowed = tryPlayTransitionAnimationTo(stateTarget);
+
+    if (wasAllowed)
+    {
+      mWeaponMode = mode;
+    }
+
+    if (!wasAllowed)
+    {
+      // FIXME: We're missing some aniAliases, for example, "T_RUN_2_SNEAK" exists,
+      //        and "T_SNEAK_2_RUN" is just the same animation but in reverse. This
+      //        is defined using an aniAlias, which does not seem to be implemented.
+      auto c = mVisual->findAnimationClip(stateTarget);
+
+      if (c)
+      {
+        mVisual->playAnimationClip(c);
+        mWeaponMode = mode;
+      }
+    }
+
+    return wasAllowed;
+  }
+
+  void CharacterAI::tryToggleWalking()
+  {
+    switch (mWalkMode)
+    {
+      case AI::WalkMode::Run:
+        changeWalkMode(AI::WalkMode::Walk);
+        break;
+
+      case AI::WalkMode::Walk:
+        changeWalkMode(AI::WalkMode::Run);
+        break;
+
+      case AI::WalkMode::Sneak:
+        changeWalkMode(AI::WalkMode::Run);
+        break;
+
+      default:
+        // Keep current Walk-Mode
+        break;
+    }
+  }
+
+  void CharacterAI::tryToggleSneaking()
+  {
+    switch (mWalkMode)
+    {
+      case AI::WalkMode::Run:
+        changeWalkMode(AI::WalkMode::Sneak);
+        break;
+
+      case AI::WalkMode::Walk:
+        changeWalkMode(AI::WalkMode::Sneak);
+        break;
+
+      case AI::WalkMode::Sneak:
+        changeWalkMode(AI::WalkMode::Run);
+        break;
+
+      default:
+        // Keep current Walk-Mode
+        break;
+    }
+  }
+
+  void CharacterAI::tryToggleMeleeWeapon()
+  {
+    switch (mWeaponMode)
+    {
+      case AI::WeaponMode::None:
+        changeWeaponMode(AI::WeaponMode::Fist);
+        break;
+
+      default:
+        changeWeaponMode(AI::WeaponMode::None);
+        break;
+    }
   }
 
   void CharacterAI::stopProcessingInfos()

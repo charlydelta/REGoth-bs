@@ -1,5 +1,4 @@
 #include "GameWorld.hpp"
-#include <components/Sky.hpp>
 #include <BsZenLib/ImportPath.hpp>
 #include <RTTI/RTTI_GameWorld.hpp>
 #include <Resources/BsResources.h>
@@ -9,16 +8,20 @@
 #include <components/Focusable.hpp>
 #include <components/GameClock.hpp>
 #include <components/Item.hpp>
+#include <components/Sky.hpp>
 #include <components/VisualCharacter.hpp>
 #include <components/Waynet.hpp>
 #include <daedalus/DATFile.h>
 #include <exception/Throw.hpp>
+#include <log/logging.hpp>
 #include <original-content/VirtualFileSystem.hpp>
 #include <scripting/ScriptVMForGameWorld.hpp>
 #include <world/internals/ConstructFromZEN.hpp>
 
 namespace REGoth
 {
+  const char* const WORLD_STARTPOINT = "STARTPOINT";
+
   GameWorld::GameWorld(const bs::HSceneObject& parent, const bs::String& zenFile)
       : bs::Component(parent)
       , mZenFile(zenFile)
@@ -180,7 +183,7 @@ namespace REGoth
     transform.move(
         bs::Vector3(0, 0.5f, 0));  // FIXME: Can we move the center to the feet somehow instead?
 
-    bs::gDebug().logDebug("[GameWorld] Insert Character " + instance + " at " + spawnPoint);
+    REGOTH_LOG(Info, Uncategorized, "[GameWorld] Insert Character {0} at {1}", instance, spawnPoint);
 
     return insertCharacter(instance, transform);
   }
