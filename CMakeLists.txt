@@ -68,6 +68,9 @@ else()
   # (but later on when installing)
   set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
+  # Some other dependencies (like cxxopts) rely on exceptions.
+  set(BSF_ENABLE_EXCEPTIONS ON)
+
   add_subdirectory(lib/bsf)
 
 endif()
@@ -80,7 +83,7 @@ add_subdirectory(lib/BsZenLib)
 # cxxopts as library to parse command line options
 set(CXXOPTS_BUILD_EXAMPLES OFF)
 set(CXXOPTS_BUILD_TESTS OFF)
-add_definitions(-DCXXOPTS_NO_RTTI -DCXXOPTS_NO_EXCEPTIONS)
+add_definitions(-DCXXOPTS_NO_RTTI)
 add_subdirectory(lib/cxxopts)
 
 ###############################################################################
