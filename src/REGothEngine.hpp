@@ -256,6 +256,9 @@ namespace REGoth
 
   };
 
+  /**
+   * A REGothEngine which implements the default configuration.
+   */
   class REGothEngineDefaultConfig : public REGothEngine
   {
 
