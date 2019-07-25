@@ -257,13 +257,17 @@ namespace REGoth
   };
 
   /**
-   * A REGothEngine which implements the default configuration.
+   * A concrete `REGothEngine` which uses the default configuration.
    */
   class REGothEngineDefaultConfig : public REGothEngine
   {
 
   public:
 
+    /**
+     * Constructs an engine object given a configuration.
+     * @param config Engine configuration.
+     */
     REGothEngineDefaultConfig(std::unique_ptr<const EngineConfig>&& config);
 
     /**
@@ -283,18 +287,18 @@ namespace REGoth
   };
 
   /**
-   * Parses the given command line arguments in argv to populate the given configuration object
+   * Parses the given command line arguments in `argv` to populate the given configuration object
    * config.
    *
-   * @param argc Main's argc.
-   * @param argv Main's argv.
+   * @param argc Main's `argc`.
+   * @param argv Main's `argv`.
    * @param config Output parameter to populate with parsed options.
    */
   template <class T>
   std::unique_ptr<const T> parseArguments(int argc, char** argv)
   {
-    static_assert(std::is_base_of<EngineConfig, T>(), "Template class must have"
-                                                      "`REGoth::EngineConfig` is base class");
+    static_assert(std::is_base_of<EngineConfig, T>(), "Template class must have "
+                                                      "`REGoth::EngineConfig` as base class");
 
     std::unique_ptr<T> config = std::make_unique<T>();
 
