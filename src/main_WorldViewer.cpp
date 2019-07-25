@@ -15,7 +15,7 @@
 #include <original-content/OriginalGameFiles.hpp>
 #include <original-content/VirtualFileSystem.hpp>
 
-struct Config : public REGoth::EngineConfig
+struct WorldViewerConfig : public REGoth::EngineConfig
 {
 
   virtual void registerCLIOptions(cxxopts::Options& opts) override
@@ -50,15 +50,15 @@ class REGothWorldViewer : public REGoth::REGothEngine
 
 public:
 
-  REGothWorldViewer(std::unique_ptr<const Config>&& config) :
+  REGothWorldViewer(std::unique_ptr<const WorldViewerConfig>&& config) :
     REGoth::REGothEngine(std::move(config))
   {
     // pass
   }
 
-  const Config* config() const override
+  const WorldViewerConfig* config() const override
   {
-    return static_cast<const Config*>(REGothEngine::config());
+    return static_cast<const WorldViewerConfig*>(REGothEngine::config());
   }
 
   void loadModPackages(const REGoth::OriginalGameFiles& /* files */) override
@@ -136,7 +136,8 @@ protected:
 
 int main(int argc, char** argv)
 {
-  std::unique_ptr<const Config> config = REGoth::parseArguments<Config>(argc, argv);
+  std::unique_ptr<const WorldViewerConfig> config
+      = REGoth::parseArguments<WorldViewerConfig>(argc, argv);
   REGothWorldViewer engine{std::move(config)};
 
   return REGoth::runEngine(engine);
