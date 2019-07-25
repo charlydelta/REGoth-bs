@@ -15,10 +15,8 @@
 #include <original-content/OriginalGameFiles.hpp>
 #include <original-content/VirtualFileSystem.hpp>
 
-class Config : public REGoth::EngineConfig
+struct Config : public REGoth::EngineConfig
 {
-
-public:
 
   virtual void registerCLIOptions(cxxopts::Options& opts) override
   {
@@ -49,15 +47,21 @@ public:
 
 class REGothWorldViewer : public REGoth::REGothEngine
 {
-public:
-  REGothWorldViewer(const Config& config) : REGoth::REGothEngine(config) {}
 
-  const Config& config() const override
+public:
+
+  REGothWorldViewer(std::unique_ptr<const Config>&& config) :
+    REGoth::REGothEngine(std::move(config))
   {
-    return static_cast<const Config&>(mConfig);
+    // pass
   }
 
-  void loadModPackages(const REGoth::OriginalGameFiles& files) override
+  const Config* config() const override
+  {
+    return static_cast<const Config*>(REGothEngine::config());
+  }
+
+  void loadModPackages(const REGoth::OriginalGameFiles& /* files */) override
   {
     // using namespace REGoth;
 
@@ -84,14 +88,14 @@ public:
   {
     using namespace REGoth;
 
-    const bs::String SAVEGAME = "WorldViewer-" + config().world;
+    const bs::String SAVEGAME = "WorldViewer-" + config()->world;
 
     bs::HPrefab worldPrefab = GameWorld::load(SAVEGAME);
     HGameWorld world;
 
     if (!worldPrefab)
     {
-      world = GameWorld::importZEN(config().world);
+      world = GameWorld::importZEN(config()->world);
 
       HCharacter hero = world->insertCharacter("PC_HERO", WORLD_STARTPOINT);
       hero->useAsHero();
@@ -132,9 +136,8 @@ protected:
 
 int main(int argc, char** argv)
 {
-  Config config;
-  REGoth::parseArguments(argc, argv, config);
-  REGothWorldViewer engine{config};
+  std::unique_ptr<const Config> config = REGoth::parseArguments<Config>(argc, argv);
+  REGothWorldViewer engine{std::move(config)};
 
   return REGoth::runEngine(engine);
 }

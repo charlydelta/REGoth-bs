@@ -62,9 +62,9 @@ public:
 
 int main(int argc, char** argv)
 {
-  REGoth::EngineConfig config;
-  REGoth::parseArguments(argc, argv, config);
-  REGothWorldCacheTest engine{config};
+  std::unique_ptr<const REGoth::EngineConfig> config
+      = REGoth::parseArguments<REGoth::EngineConfig>(argc, argv);
+  REGothWorldCacheTest engine{std::move(config)};
 
   return REGoth::runEngine(engine);
 }

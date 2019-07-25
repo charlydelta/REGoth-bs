@@ -48,9 +48,9 @@ protected:
 
 int main(int argc, char** argv)
 {
-  REGoth::EngineConfig config;
-  REGoth::parseArguments(argc, argv, config);
-  REGothScriptTester engine{config};
+  std::unique_ptr<const REGoth::EngineConfig> config
+      = REGoth::parseArguments<REGoth::EngineConfig>(argc, argv);
+  REGothScriptTester engine{std::move(config)};
 
   return REGoth::runEngine(engine);
 }
