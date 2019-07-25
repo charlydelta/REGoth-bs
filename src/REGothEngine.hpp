@@ -125,7 +125,7 @@ namespace REGoth
     bs::Path engineExecutablePath;
     bs::Path originalAssetsPath;
     unsigned int resolutionX = 1280;
-    unsigned int resolutionY = 768;
+    unsigned int resolutionY = 720;
     bool isFullscreen = false;
 
   };
