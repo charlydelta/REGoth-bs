@@ -18,11 +18,11 @@
 #include <log/logging.hpp>
 #include <original-content/VirtualFileSystem.hpp>
 
-class REGothWorldCacheTest : public REGoth::REGothEngine
+class REGothWorldCacheTest : public REGoth::REGothEngineDefaultConfig
 {
 public:
 
-  using REGoth::REGothEngine::REGothEngine;
+  using REGoth::REGothEngineDefaultConfig::REGothEngineDefaultConfig;
 
   void setupMainCamera() override
   {

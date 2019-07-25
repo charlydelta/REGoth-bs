@@ -51,14 +51,14 @@ class REGothWorldViewer : public REGoth::REGothEngine
 public:
 
   REGothWorldViewer(std::unique_ptr<const WorldViewerConfig>&& config) :
-    REGoth::REGothEngine(std::move(config))
+    mConfig{std::move(config)}
   {
     // pass
   }
 
   const WorldViewerConfig* config() const override
   {
-    return static_cast<const WorldViewerConfig*>(REGothEngine::config());
+    return mConfig.get();
   }
 
   void loadModPackages(const REGoth::OriginalGameFiles& /* files */) override
@@ -131,6 +131,10 @@ public:
 protected:
 
   REGoth::HThirdPersonCamera mThirdPersonCamera;
+
+private:
+
+  std::unique_ptr<const WorldViewerConfig> mConfig;
 
 };
 

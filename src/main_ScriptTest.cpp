@@ -7,11 +7,11 @@
 #include <original-content/VirtualFileSystem.hpp>
 #include <scripting/ScriptSymbolStorage.hpp>
 
-class REGothScriptTester : public REGoth::REGothEngine
+class REGothScriptTester : public REGoth::REGothEngineDefaultConfig
 {
 public:
 
-  using REGoth::REGothEngine::REGothEngine;
+  using REGoth::REGothEngineDefaultConfig::REGothEngineDefaultConfig;
 
   void setupMainCamera() override
   {

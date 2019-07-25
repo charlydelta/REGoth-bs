@@ -29,12 +29,6 @@ std::stringstream& operator>>(std::stringstream& str, bs::Path& path)
  */
 const bs::String REGOTH_CONTENT_DIR_NAME = "content";
 
-REGothEngine::REGothEngine(std::unique_ptr<const EngineConfig>&& config) :
-  mConfig{std::move(config)}
-{
-  // pass
-}
-
 REGothEngine::~REGothEngine()
 {
 }
@@ -235,7 +229,13 @@ void REGothEngine::shutdown()
   }
 }
 
-const EngineConfig* REGothEngine::config() const
+REGothEngineDefaultConfig::REGothEngineDefaultConfig(std::unique_ptr<const EngineConfig>&& config) :
+  mConfig{std::move(config)}
+{
+  // pass
+}
+
+const EngineConfig* REGothEngineDefaultConfig::config() const
 {
   return mConfig.get();
 }

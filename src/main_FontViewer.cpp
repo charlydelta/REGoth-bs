@@ -16,11 +16,11 @@
 #include <original-content/VirtualFileSystem.hpp>
 #include <gui/skin_gothic.hpp>
 
-class REGothFontViewer : public REGoth::REGothEngine
+class REGothFontViewer : public REGoth::REGothEngineDefaultConfig
 {
 public:
 
-  using REGoth::REGothEngine::REGothEngine;
+  using REGoth::REGothEngineDefaultConfig::REGothEngineDefaultConfig;
 
   void setupMainCamera() override
   {

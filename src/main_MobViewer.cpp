@@ -7,11 +7,11 @@
 #include <log/logging.hpp>
 #include <original-content/VirtualFileSystem.hpp>
 
-class REGothMobViewer : public REGoth::REGothEngine
+class REGothMobViewer : public REGoth::REGothEngineDefaultConfig
 {
 public:
 
-  using REGoth::REGothEngine::REGothEngine;
+  using REGoth::REGothEngineDefaultConfig::REGothEngineDefaultConfig;
 
   void setupMainCamera() override
   {

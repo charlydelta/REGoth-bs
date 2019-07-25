@@ -155,7 +155,6 @@ namespace REGoth
 
   public:
 
-    REGothEngine(std::unique_ptr<const EngineConfig>&& config);
     virtual ~REGothEngine();
 
     /**
@@ -241,7 +240,7 @@ namespace REGoth
      *
      * @return Engine configuration data structure.
      */
-    virtual const EngineConfig* config() const;
+    virtual const EngineConfig* config() const = 0;
 
   protected:
 
@@ -254,6 +253,22 @@ namespace REGoth
      * Path to REGoth's own `content`-directory and resource loader.
      */
     bs::SPtr<EngineContent> mEngineContent;
+
+  };
+
+  class REGothEngineDefaultConfig : public REGothEngine
+  {
+
+  public:
+
+    REGothEngineDefaultConfig(std::unique_ptr<const EngineConfig>&& config);
+
+    /**
+     * Gets the engine's configuration.
+     *
+     * @return Engine configuration data structure.
+     */
+    const EngineConfig* config() const override;
 
   private:
 

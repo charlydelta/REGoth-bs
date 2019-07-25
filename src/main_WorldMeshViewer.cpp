@@ -4,11 +4,11 @@
 #include <Scene/BsSceneObject.h>
 #include <world/internals/ConstructFromZEN.hpp>
 
-class REGothWorldMeshViewer : public REGoth::REGothEngine
+class REGothWorldMeshViewer : public REGoth::REGothEngineDefaultConfig
 {
 public:
 
-  using REGoth::REGothEngine::REGothEngine;
+  using REGoth::REGothEngineDefaultConfig::REGothEngineDefaultConfig;
 
   void setupMainCamera() override
   {

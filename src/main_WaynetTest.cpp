@@ -10,11 +10,11 @@
 #include <exception/Throw.hpp>
 #include <original-content/VirtualFileSystem.hpp>
 
-class REGothWaynetTester : public REGoth::REGothEngine
+class REGothWaynetTester : public REGoth::REGothEngineDefaultConfig
 {
 public:
 
-  using REGoth::REGothEngine::REGothEngine;
+  using REGoth::REGothEngineDefaultConfig::REGothEngineDefaultConfig;
 
   void setupMainCamera() override
   {

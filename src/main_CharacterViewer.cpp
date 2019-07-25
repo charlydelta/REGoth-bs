@@ -26,11 +26,11 @@
 #include <log/logging.hpp>
 #include <original-content/VirtualFileSystem.hpp>
 
-class REGothCharacterViewer : public REGoth::REGothEngine
+class REGothCharacterViewer : public REGoth::REGothEngineDefaultConfig
 {
 public:
 
-  using REGoth::REGothEngine::REGothEngine;
+  using REGoth::REGothEngineDefaultConfig::REGothEngineDefaultConfig;
 
   void setupMainCamera() override
   {
