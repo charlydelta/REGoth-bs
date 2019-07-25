@@ -29,8 +29,8 @@ std::stringstream& operator>>(std::stringstream& str, bs::Path& path)
  */
 const bs::String REGOTH_CONTENT_DIR_NAME = "content";
 
-REGothEngine::REGothEngine(const EngineConfig& config) :
-  mConfig{config}
+REGothEngine::REGothEngine(std::unique_ptr<const EngineConfig>&& config) :
+  mConfig{std::move(config)}
 {
   // pass
 }
@@ -41,9 +41,9 @@ REGothEngine::~REGothEngine()
 
 void REGothEngine::loadGamePackages()
 {
-  OriginalGameFiles files = OriginalGameFiles(config().originalAssetsPath);
+  OriginalGameFiles files = OriginalGameFiles(config()->originalAssetsPath);
 
-  gVirtualFileSystem().setPathToEngineExecutable(config().engineExecutablePath.toString());
+  gVirtualFileSystem().setPathToEngineExecutable(config()->engineExecutablePath.toString());
 
   REGOTH_LOG(Info, Uncategorized, "[VDFS] Indexing packages: ");
 
@@ -58,7 +58,7 @@ void REGothEngine::loadGamePackages()
   loadModPackages(files);
 }
 
-void REGothEngine::loadModPackages(const OriginalGameFiles& files)
+void REGothEngine::loadModPackages(const OriginalGameFiles& /* files */)
 {
   // Don't load mod-files by defaults
 }
@@ -82,7 +82,7 @@ bool REGothEngine::hasFoundGameFiles()
 
 void REGothEngine::findEngineContent()
 {
-  mEngineContent = bs::bs_shared_ptr_new<EngineContent>(config().engineExecutablePath);
+  mEngineContent = bs::bs_shared_ptr_new<EngineContent>(config()->engineExecutablePath);
 
   if (!mEngineContent->hasFoundContentDirectory())
   {
@@ -97,8 +97,8 @@ void REGothEngine::initializeBsf()
 {
   using namespace bs;
 
-  VideoMode videoMode{config().resolutionX, config().resolutionY};
-  Application::startUp(videoMode, "REGoth", config().isFullscreen);
+  VideoMode videoMode{config()->resolutionX, config()->resolutionY};
+  Application::startUp(videoMode, "REGoth", config()->isFullscreen);
 }
 
 void REGothEngine::loadCachedResourceManifests()
@@ -148,8 +148,10 @@ void REGothEngine::setupInput()
 
   // Camera controls for axes (analog input, e.g. mouse or gamepad thumbstick)
   // These return values in [-1.0, 1.0] range.
-  inputConfig->registerAxis("Horizontal", VIRTUAL_AXIS_DESC((UINT32)InputAxis::MouseX));
-  inputConfig->registerAxis("Vertical", VIRTUAL_AXIS_DESC((UINT32)InputAxis::MouseY));
+  inputConfig->registerAxis("Horizontal",
+                            VIRTUAL_AXIS_DESC(static_cast<UINT32>(InputAxis::MouseX)));
+  inputConfig->registerAxis("Vertical",
+                            VIRTUAL_AXIS_DESC(static_cast<UINT32>(InputAxis::MouseY)));
 }
 
 void REGothEngine::setupMainCamera()
@@ -233,55 +235,9 @@ void REGothEngine::shutdown()
   }
 }
 
-const EngineConfig& REGothEngine::config() const
+const EngineConfig* REGothEngine::config() const
 {
-  return mConfig;
-}
-
-void ::REGoth::parseArguments(int argc, char** argv, EngineConfig& config)
-{
-  bool help;
-  bool version;
-
-  cxxopts::Options options{argv[0], "REGoth - zEngine Reimplementation."};
-
-  // Add general options.
-  options.add_options()
-    ("h,help", "Print this help message", cxxopts::value<bool>(help))
-    ("version", "Print the REGoth version", cxxopts::value<bool>(version))
-    ("v,verbosity", "Verbosity level", cxxopts::value<bool>())
-    ;
-
-  // Add options (engine options and specialised ones).
-  config.registerCLIEngineOptions(options);
-  config.registerCLIOptions(options);
-
-  // Parse argv.
-  cxxopts::ParseResult result = options.parse(argc, argv);
-
-  // Print help if `-h` or `--help` is passed and exit.
-  if (help)
-  {
-    std::cout << options.help() << std::endl;
-    std::exit(EXIT_SUCCESS);
-  }
-
-  // Print REGoth version if `--version` is passed and exit.
-  if (version)
-  {
-    std::cout << "Not yet implemented" << std::endl;
-    std::exit(EXIT_SUCCESS);
-  }
-
-  // Set verbosity level.
-  config.verbosity = static_cast<unsigned int>(result.count("verbosity"));
-
-  // Game executable path must be set manually here.
-  config.engineExecutablePath = bs::Path{argv[0]};
-
-  // Verify configuration.
-  config.verifyCLIEngineOptions();
-  config.verifyCLIOptions();
+  return mConfig.get();
 }
 
 int ::REGoth::runEngine(REGothEngine& engine)
@@ -290,9 +246,9 @@ int ::REGoth::runEngine(REGothEngine& engine)
 
   REGOTH_LOG(Info, Uncategorized, "[Main] Running REGothEngine");
   REGOTH_LOG(Info, Uncategorized, "[Main]  - Engine executable: {0}",
-             engine.config().engineExecutablePath.toString());
+             engine.config()->engineExecutablePath.toString());
   REGOTH_LOG(Info, Uncategorized, "[Main]  - Game directory:    {0}",
-             engine.config().originalAssetsPath.toString());
+             engine.config()->originalAssetsPath.toString());
 
   REGOTH_LOG(Info, Uncategorized, "[Main] Finding REGoth content-directory");
   engine.findEngineContent();
@@ -302,34 +258,36 @@ int ::REGoth::runEngine(REGothEngine& engine)
 
   if (!engine.hasFoundGameFiles())
   {
-    std::cerr << "No files loaded into the VDFS - is the game assets path correct?" << std::endl;
+    REGOTH_LOG(Fatal, Uncategorized, "No files loaded into the VDFS - is the game assets path "
+                                     "correct?");
     return EXIT_FAILURE;
   }
 
-  bs::gDebug().logDebug("[REGothEngine] Load cached resource manifests");
+  REGOTH_LOG(Info, Uncategorized, "[REGothEngine] Load cached resource manifests");
   engine.loadCachedResourceManifests();
 
   REGOTH_LOG(Info, Uncategorized, "[REGothEngine] Loading Shaders");
-
   engine.setShaders();
+
+  REGOTH_LOG(Info, Uncategorized, "[REGothEngine] Setting up input");
   engine.setupInput();
 
   REGOTH_LOG(Info, Uncategorized, "[REGothEngine] Setting up Main Camera");
-
   engine.setupMainCamera();
 
   REGOTH_LOG(Info, Uncategorized, "[REGothEngine] Setting up Scene");
+  engine.setupScene();
 
-  bs::gDebug().logDebug("[REGothEngine] Save cached resource manifests");
+  REGOTH_LOG(Info, Uncategorized, "[REGothEngine] Save cached resource manifests");
   engine.saveCachedResourceManifests();
 
-  bs::gDebug().logDebug("[REGothEngine] Run");
+  REGOTH_LOG(Info, Uncategorized, "[REGothEngine] Run");
   engine.run();
 
-  bs::gDebug().logDebug("[REGothEngine] Save cached resource manifests");
+  REGOTH_LOG(Info, Uncategorized, "[REGothEngine] Save cached resource manifests");
   engine.saveCachedResourceManifests();
 
-  bs::gDebug().logDebug("[REGothEngine] Shutdown");
+  REGOTH_LOG(Info, Uncategorized, "[REGothEngine] Shutdown");
   engine.shutdown();
 
   return EXIT_SUCCESS;

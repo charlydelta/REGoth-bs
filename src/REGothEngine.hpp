@@ -4,9 +4,13 @@
 #pragma once
 
 #include <iostream>
+#include <memory>
 
 #include <BsPrerequisites.h>
 #include <FileSystem/BsFileSystem.h>
+#include <exception/Throw.hpp>
+#include <log/logging.hpp>
+#include <original-content/OriginalGameFiles.hpp>
 #include <cxxopts.hpp>
 
 /**
@@ -26,10 +30,8 @@ namespace REGoth
   /**
    * The base configuration of the engine.
    */
-  class EngineConfig
+  struct EngineConfig
   {
-
-  public:
 
     virtual ~EngineConfig()
     {
@@ -44,7 +46,8 @@ namespace REGoth
 
       // Define engine options
       options.add_options()
-        ("g,game-assets", "Path to a Gothic or Gothic 2 installation", cxxopts::value<bs::Path>(originalAssetsPath), "[PATH]")
+        ("g,game-assets", "Path to a Gothic or Gothic 2 installation",
+         cxxopts::value<bs::Path>(originalAssetsPath), "[PATH]")
         ("video-x-res", "X resolution", cxxopts::value<unsigned int>(resolutionX), "[PX]")
         ("video-y-res", "Y resolution", cxxopts::value<unsigned int>(resolutionY), "[PX]")
         ("video-fullscreen", "Run in fullscreen mode", cxxopts::value<bool>(isFullscreen))
@@ -56,12 +59,56 @@ namespace REGoth
 
     void verifyCLIEngineOptions()
     {
-      // Resolve paths.
-      engineExecutablePath.makeAbsolute(bs::FileSystem::getWorkingDirectoryPath());
-      originalAssetsPath.makeAbsolute(bs::FileSystem::getWorkingDirectoryPath());
+      // Assert that engineExecutablePath is not empty.
+      if (engineExecutablePath.isEmpty())
+      {
+        REGOTH_THROW(InvalidStateException, "Engine executable path could not be determined.");
+      }
 
-      // TODO: Verify that assetsPath is a valid Gothic or Gothic 2 installation.
-      // TODO: Info whether assetsPath points to Gothic or Gothic 2 could be helpful. How to determine?
+      // Resolve engineExecutablePath.
+      engineExecutablePath.makeAbsolute(bs::FileSystem::getWorkingDirectoryPath());
+
+      // If originalAssetsPath is unset, try to derive possible fallbacks.
+      if (originalAssetsPath.isEmpty())
+      {
+        REGOTH_LOG(Info, Uncategorized, "No game asset path given. Trying executable path...");
+
+        // Use engineExecutablePath as first choice.
+        originalAssetsPath = OriginalGameFiles::findGameFilesRoot(engineExecutablePath);
+
+        // If originalAssetsPath is still unset, try current working directory.
+        if (originalAssetsPath.isEmpty() &&
+            engineExecutablePath != bs::FileSystem::getWorkingDirectoryPath())
+        {
+          REGOTH_LOG(Info, Uncategorized, "Failed. Trying current working directory...");
+
+          originalAssetsPath
+            = OriginalGameFiles::findGameFilesRoot(bs::FileSystem::getWorkingDirectoryPath());
+
+          if (originalAssetsPath.isEmpty())
+          {
+            REGOTH_LOG(Info, Uncategorized, "Failed. Giving up.");
+            REGOTH_THROW(InvalidStateException, "Could not find a game asset folder. Try "
+                                                "specifying it with `--game-assets`.");
+          }
+        }
+
+        REGOTH_LOG(Info, Uncategorized, "Succeded");
+      }
+      // Otherwise verify and resolve user-supplied input.
+      else
+      {
+        bs::String userInput = originalAssetsPath.toString();
+
+        // Probe user-supplied directory.
+        originalAssetsPath = OriginalGameFiles::findGameFilesRoot(originalAssetsPath);
+
+        if (originalAssetsPath.isEmpty())
+        {
+          REGOTH_THROW(InvalidStateException, "Could not find a Gothic or Gothic 2 installation at "
+                                              "the supplied path `" + userInput + "`.");
+        }
+      }
     }
 
     virtual void registerCLIOptions(cxxopts::Options& /* options */)
@@ -108,7 +155,7 @@ namespace REGoth
 
   public:
 
-    REGothEngine(const EngineConfig& config);
+    REGothEngine(std::unique_ptr<const EngineConfig>&& config);
     virtual ~REGothEngine();
 
     /**
@@ -117,9 +164,6 @@ namespace REGoth
      *  1. Data/ (*.vdf)
      *  2. _world/ (Recursive)
      *  3. Data/modvdf/ (*.mod, recursive)
-     *
-     * @param  executablePath  Path to the currently running executable (argv[0])
-     * @param  gameDirectory   Location where Gothics game files can be found.
      */
     void loadGamePackages();
 
@@ -179,8 +223,6 @@ namespace REGoth
 
     /**
      * Find the location of REGoths own `content`-directory.
-     *
-     * @param  executablePath  Path to the currently running executable.
      */
     void findEngineContent();
 
@@ -199,7 +241,7 @@ namespace REGoth
      *
      * @return Engine configuration data structure.
      */
-    virtual const EngineConfig& config() const;
+    virtual const EngineConfig* config() const;
 
   protected:
 
@@ -213,21 +255,83 @@ namespace REGoth
      */
     bs::SPtr<EngineContent> mEngineContent;
 
+  private:
+
     /**
      * Engine base configuration.
      */
-    const EngineConfig mConfig;
+    std::unique_ptr<const EngineConfig> mConfig;
 
   };
 
   /**
-   * Parses the given command line arguments in argv to populate the given configuration object config.
+   * Parses the given command line arguments in argv to populate the given configuration object
+   * config.
    *
    * @param argc Main's argc.
    * @param argv Main's argv.
    * @param config Output parameter to populate with parsed options.
    */
-  void parseArguments(int argc, char** argv, EngineConfig& config);
+  template <class T>
+  std::unique_ptr<const T> parseArguments(int argc, char** argv)
+  {
+    static_assert(std::is_base_of<EngineConfig, T>(), "Template class must have"
+                                                      "`REGoth::EngineConfig` is base class");
+
+    std::unique_ptr<T> config = std::make_unique<T>();
+
+    // Some utility functions involving bs::Path fail if this was not called prior.
+    bs::MemStack::beginThread();
+
+    bool help;
+    bool version;
+
+    cxxopts::Options options{argv[0], "REGoth - zEngine Reimplementation."};
+
+    // Add general options.
+    options.add_options()
+      ("h,help", "Print this help message", cxxopts::value<bool>(help))
+      ("version", "Print the REGoth version", cxxopts::value<bool>(version))
+      ("v,verbosity", "Verbosity level", cxxopts::value<bool>())
+      ;
+
+    // Add options (engine options and specialised ones).
+    config->registerCLIEngineOptions(options);
+    config->registerCLIOptions(options);
+
+    // Parse argv.
+    cxxopts::ParseResult result = options.parse(argc, argv);
+
+    // Print help if `-h` or `--help` is passed and exit.
+    if (help)
+    {
+      std::cout << options.help() << std::endl;
+      std::exit(EXIT_SUCCESS);
+    }
+
+    // Print REGoth version if `--version` is passed and exit.
+    if (version)
+    {
+      std::cout << "Not yet implemented" << std::endl;
+      std::exit(EXIT_SUCCESS);
+    }
+
+    // Set verbosity level.
+    config->verbosity = static_cast<unsigned int>(result.count("verbosity"));
+
+    // Game executable path must be set manually here.
+    config->engineExecutablePath = bs::Path{argv[0]};
+
+    // Verify configuration.
+    config->verifyCLIEngineOptions();
+    config->verifyCLIOptions();
+
+    // Clean up.
+    bs::MemStack::endThread();
+
+    return config;
+  }
+
 
   /**
    * Bootstrap and run the given engine.
