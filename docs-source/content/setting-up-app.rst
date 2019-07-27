@@ -17,42 +17,39 @@ To get started with your own "playgound", let's call it *HelloREGoth*, create an
 
 .. code-block:: cpp
 
-   #include <memory>
+  #include <memory>
 
-   #include "REGothEngine.hpp"
+  #include <REGothEngine.hpp>
 
-   class HelloREGoth : public REGoth::REGothEngineDefaultConfig
-   {
+  class HelloREGoth : public REGoth::REGothEngineDefaultConfig
+  {
+  public:
+    // Use the super class constructor for now.
+    using REGoth::REGothEngineDefaultConfig::REGothEngineDefaultConfig;
 
-   public:
+    void setupMainCamera() override
+    {
+      REGoth::REGothEngine::setupMainCamera();
+    }
 
-     // Use the super class constructor for now.
-     using REGoth::REGothEngineDefaultConfig::REGothEngineDefaultConfig;
+    void setupScene() override
+    {
+      // Your code to setup the test environment goes here, but let's just greet REGoth for now. :)
+      REGOTH_LOG(Info, Uncategorized, "Hello REGoth!");
+    }
+  };
 
-     void setupMainCamera() override
-     {
-       REGoth::REGothEngine::setupMainCamera();
-     }
+  int main(int argc, char** argv)
+  {
+    // Create a default configuration object and parse the command line arguments.
+    std::unique_ptr<const REGoth::EngineConfig> config =
+        REGoth::parseArguments<REGoth::EngineConfig>(argc, argv);
+    // Construct the engine and pass the configuration object.
+    HelloREGoth engine{std::move(config)};
 
-     void setupScene() override
-     {
-       // Your code to setup the test environment goes here, but let's just greet REGoth for now. :)
-       REGOTH_LOG(Info, Uncategorized, "Hello REGoth!");
-     }
-
-   };
-
-   int main(int argc, char** argv)
-   {
-     // Create a default configuration object and parse the command line arguments.
-     std::unique_ptr<const REGoth::EngineConfig> config
-         = REGoth::parseArguments<REGoth::EngineConfig>(argc, argv);
-     // Construct the engine and pass the configuration object.
-     HelloREGoth engine{std::move(config)};
-
-     // Run the engine.
-     return REGoth::runEngine(engine);
-   }
+    // Run the engine.
+    return REGoth::runEngine(engine);
+  }
 
 Additionally, add the following lines to ``src/CMakeLists.txt``:
 
@@ -85,20 +82,17 @@ use of the internally used library, namely cxxopts_, for command line parsing.
 
   #include <memory>
 
-  #include "REGothEngine.hpp"
+  #include <REGothEngine.hpp>
 
   struct HelloREGothConfig : public REGoth::EngineConfig
   {
-
     // Here we define the CLI options using cxxopts.
     virtual void registerCLIOptions(cxxopts::Options& opts) override
     {
       // We only define one option, namely `--greeting`, which will be written into the `greeting`
       // attribute in this struct.
-      opts.add_options()
-        ("greeting", "Specify your custom greeting", cxxopts::value<bs::String>(greeting),
-         "[GREETING]")
-        ;
+      opts.add_option("", "", "greeting", "Specify your custom greeting",
+                      cxxopts::value<bs::String>(greeting), "[GREETING]");
     }
 
     // Here we can verify the parsed options and modify the if need be.
@@ -124,13 +118,11 @@ use of the internally used library, namely cxxopts_, for command line parsing.
   // We don't derive from `REGoth::REGothEngineDefaultConfig` now for obvious reason.
   class HelloREGoth : public REGoth::REGothEngine
   {
-
   public:
-
     // We define a constructor to make sure that our engine can only be instantiated with
     // the correct configuration object type.
-    HelloREGoth(std::unique_ptr<const HelloREGothConfig>&& config) :
-        mConfig{std::move(config)}
+    HelloREGoth(std::unique_ptr<const HelloREGothConfig>&& config)
+        : mConfig{std::move(config)}
     {
       // pass
     }
@@ -153,17 +145,15 @@ use of the internally used library, namely cxxopts_, for command line parsing.
     }
 
   private:
-
     // In this member, our configuration object will be stored.
     std::unique_ptr<const HelloREGothConfig> mConfig;
-
   };
 
   int main(int argc, char** argv)
   {
     // Create a default configuration object and parse the command line arguments.
-    std::unique_ptr<const HelloREGothConfig> config
-        = REGoth::parseArguments<HelloREGothConfig>(argc, argv);
+    std::unique_ptr<const HelloREGothConfig> config =
+        REGoth::parseArguments<HelloREGothConfig>(argc, argv);
     // Construct the engine and pass the configuration object.
     HelloREGoth engine{std::move(config)};
 
