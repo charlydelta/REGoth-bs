@@ -81,6 +81,7 @@ use of the internally used library, namely cxxopts_, for command line parsing.
 .. code-block:: cpp
 
   #include <memory>
+  #include <string>
 
   #include <REGothEngine.hpp>
 
@@ -91,7 +92,8 @@ use of the internally used library, namely cxxopts_, for command line parsing.
     {
       // We only define one option, namely `--greeting`, which will be written into the `greeting`
       // attribute in this struct.
-      opts.add_option("", "", "greeting", "Specify your custom greeting",
+      const std::string grp = "HelloREGoth";
+      opts.add_option(grp, "", "greeting", "Specify your custom greeting",
                       cxxopts::value<bs::String>(greeting), "[GREETING]");
     }
 

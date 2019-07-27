@@ -225,6 +225,7 @@ greeting <code class="docutils literal notranslate"><span class="pre">[INFO]</sp
 easily test certain aspects.  The following template shows what needs to be added in order to make
 use of the internally used library, namely <a class="reference external" href="https://github.com/jarro2783/cxxopts">cxxopts</a>, for command line parsing.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;memory&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;string&gt;</span><span class="cp"></span>
 
 <span class="cp">#include</span> <span class="cpf">&lt;REGothEngine.hpp&gt;</span><span class="cp"></span>
 
@@ -235,7 +236,8 @@ use of the internally used library, namely <a class="reference external" href="h
   <span class="p">{</span>
     <span class="c1">// We only define one option, namely `--greeting`, which will be written into the `greeting`</span>
     <span class="c1">// attribute in this struct.</span>
-    <span class="n">opts</span><span class="p">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="s">&quot;greeting&quot;</span><span class="p">,</span> <span class="s">&quot;Specify your custom greeting&quot;</span><span class="p">,</span>
+    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">grp</span> <span class="o">=</span> <span class="s">&quot;HelloREGoth&quot;</span><span class="p">;</span>
+    <span class="n">opts</span><span class="p">.</span><span class="n">add_option</span><span class="p">(</span><span class="n">grp</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="s">&quot;greeting&quot;</span><span class="p">,</span> <span class="s">&quot;Specify your custom greeting&quot;</span><span class="p">,</span>
                     <span class="n">cxxopts</span><span class="o">::</span><span class="n">value</span><span class="o">&lt;</span><span class="n">bs</span><span class="o">::</span><span class="n">String</span><span class="o">&gt;</span><span class="p">(</span><span class="n">greeting</span><span class="p">),</span> <span class="s">&quot;[GREETING]&quot;</span><span class="p">);</span>
   <span class="p">}</span>
 
