@@ -46,7 +46,7 @@ namespace REGoth
       options.positional_help("[GAME ASSETS PATH]");
       options.show_positional_help();
 
-      std::string grp = "";  // Default group
+      const std::string grp = "Core engine";
 
       // Define engine options
       options.add_option(grp, "g", "game-assets", "Path to a Gothic or Gothic 2 installation",
@@ -310,7 +310,7 @@ namespace REGoth
     cxxopts::Options options{argv[0], "REGoth - zEngine Reimplementation."};
 
     // Add general options.
-    std::string grp = "";
+    const std::string grp = "General";
     options.add_option(grp, "h", "help", "Print this help message", cxxopts::value<bool>(help), "");
     options.add_option(grp, "", "version", "Print the REGoth version", cxxopts::value<bool>(version),
                        "");

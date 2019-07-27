@@ -1,8 +1,11 @@
-#include "BsFPSCamera.h"
+#include <string>
+
+#include <BsFPSCamera.h>
 #include <REGothEngine.hpp>
 #include <Components/BsCCamera.h>
 #include <Scene/BsPrefab.h>
 #include <Scene/BsSceneObject.h>
+
 #include <components/Character.hpp>
 #include <components/CharacterAI.hpp>
 #include <components/CharacterEventQueue.hpp>
@@ -19,8 +22,9 @@ struct WorldViewerConfig : public REGoth::EngineConfig
 {
   virtual void registerCLIOptions(cxxopts::Options& opts) override
   {
-    opts.add_option("", "w", "world", "Name of the world to load", cxxopts::value<bs::String>(world),
-                    "[NAME]");
+    const std::string grp = "WorldViewer";
+    opts.add_option(grp, "w", "world", "Name of the world to load",
+                    cxxopts::value<bs::String>(world), "[NAME]");
   }
 
   virtual void verifyCLIOptions() override
