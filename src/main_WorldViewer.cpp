@@ -17,12 +17,10 @@
 
 struct WorldViewerConfig : public REGoth::EngineConfig
 {
-
   virtual void registerCLIOptions(cxxopts::Options& opts) override
   {
-    opts.add_options()
-      ("w,world", "Name of the world to load", cxxopts::value<bs::String>(world), "[NAME]")
-      ;
+    opts.add_options()("w,world", "Name of the world to load", cxxopts::value<bs::String>(world),
+                       "[NAME]");
   }
 
   virtual void verifyCLIOptions() override
@@ -42,16 +40,13 @@ struct WorldViewerConfig : public REGoth::EngineConfig
   }
 
   bs::String world;
-
 };
 
 class REGothWorldViewer : public REGoth::REGothEngine
 {
-
 public:
-
-  REGothWorldViewer(std::unique_ptr<const WorldViewerConfig>&& config) :
-    mConfig{std::move(config)}
+  REGothWorldViewer(std::unique_ptr<const WorldViewerConfig>&& config)
+      : mConfig{std::move(config)}
   {
     // pass
   }
@@ -129,19 +124,16 @@ public:
   }
 
 protected:
-
   REGoth::HThirdPersonCamera mThirdPersonCamera;
 
 private:
-
   std::unique_ptr<const WorldViewerConfig> mConfig;
-
 };
 
 int main(int argc, char** argv)
 {
-  std::unique_ptr<const WorldViewerConfig> config
-      = REGoth::parseArguments<WorldViewerConfig>(argc, argv);
+  std::unique_ptr<const WorldViewerConfig> config =
+      REGoth::parseArguments<WorldViewerConfig>(argc, argv);
   REGothWorldViewer engine{std::move(config)};
 
   return REGoth::runEngine(engine);

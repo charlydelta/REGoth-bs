@@ -1,10 +1,10 @@
-#include "components/AnchoredTextLabels.hpp"
-#include <GUI/BsCGUIWidget.h>
-#include <components/GameWorld.hpp>
 #include "BsFPSCamera.h"
 #include "REGothEngine.hpp"
+#include "components/AnchoredTextLabels.hpp"
 #include <Components/BsCCamera.h>
+#include <GUI/BsCGUIWidget.h>
 #include <Scene/BsSceneObject.h>
+#include <components/GameWorld.hpp>
 #include <components/Waynet.hpp>
 #include <components/Waypoint.hpp>
 #include <exception/Throw.hpp>
@@ -13,7 +13,6 @@
 class REGothWaynetTester : public REGoth::REGothEngineDefaultConfig
 {
 public:
-
   using REGoth::REGothEngineDefaultConfig::REGothEngineDefaultConfig;
 
   void setupMainCamera() override
@@ -22,7 +21,7 @@ public:
 
     mMainCamera->SO()->addComponent<bs::FPSCamera>();
 
-    auto guiSO = bs::SceneObject::create("GUI");
+    auto guiSO     = bs::SceneObject::create("GUI");
     auto guiWidget = guiSO->addComponent<bs::CGUIWidget>(mMainCamera);
 
     auto debugOverlaySO = bs::SceneObject::create("DebugOverlay");
@@ -45,8 +44,8 @@ protected:
 
 int main(int argc, char** argv)
 {
-  std::unique_ptr<const REGoth::EngineConfig> config
-      = REGoth::parseArguments<REGoth::EngineConfig>(argc, argv);
+  std::unique_ptr<const REGoth::EngineConfig> config =
+      REGoth::parseArguments<REGoth::EngineConfig>(argc, argv);
   REGothWaynetTester engine{std::move(config)};
 
   return REGoth::runEngine(engine);

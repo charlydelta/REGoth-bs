@@ -6,8 +6,8 @@
 #include <Resources/BsBuiltinResources.h>
 #include <Scene/BsSceneObject.h>
 #include <components/Focusable.hpp>
-#include <components/GameplayUI.hpp>
 #include <components/GameWorld.hpp>
+#include <components/GameplayUI.hpp>
 #include <components/Item.hpp>
 #include <components/UIDialogueChoice.hpp>
 #include <components/UIElement.hpp>
@@ -17,7 +17,6 @@
 class REGothCharacterMovementTester : public REGoth::REGothEngineDefaultConfig
 {
 public:
-
   using REGoth::REGothEngineDefaultConfig::REGothEngineDefaultConfig;
 
   void setupMainCamera() override
@@ -80,8 +79,8 @@ protected:
 
 int main(int argc, char** argv)
 {
-  std::unique_ptr<const REGoth::EngineConfig> config
-      = REGoth::parseArguments<REGoth::EngineConfig>(argc, argv);
+  std::unique_ptr<const REGoth::EngineConfig> config =
+      REGoth::parseArguments<REGoth::EngineConfig>(argc, argv);
   REGothCharacterMovementTester engine{std::move(config)};
 
   return REGoth::runEngine(engine);

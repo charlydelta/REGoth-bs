@@ -7,7 +7,6 @@
 class REGothWorldMeshViewer : public REGoth::REGothEngineDefaultConfig
 {
 public:
-
   using REGoth::REGothEngineDefaultConfig::REGothEngineDefaultConfig;
 
   void setupMainCamera() override
@@ -28,8 +27,8 @@ protected:
 
 int main(int argc, char** argv)
 {
-  std::unique_ptr<const REGoth::EngineConfig> config
-      = REGoth::parseArguments<REGoth::EngineConfig>(argc, argv);
+  std::unique_ptr<const REGoth::EngineConfig> config =
+      REGoth::parseArguments<REGoth::EngineConfig>(argc, argv);
   REGothWorldMeshViewer engine{std::move(config)};
 
   return REGoth::runEngine(engine);

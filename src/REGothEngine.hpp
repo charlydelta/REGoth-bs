@@ -7,11 +7,11 @@
 #include <memory>
 
 #include <BsPrerequisites.h>
+#include <cxxopts.hpp>
 #include <FileSystem/BsFileSystem.h>
 #include <exception/Throw.hpp>
 #include <log/logging.hpp>
 #include <original-content/OriginalGameFiles.hpp>
-#include <cxxopts.hpp>
 
 /**
  * Allows using the bs::Path data type together with cxxopts.
@@ -32,7 +32,6 @@ namespace REGoth
    */
   struct EngineConfig
   {
-
     virtual ~EngineConfig()
     {
       // pass
@@ -45,13 +44,11 @@ namespace REGoth
       options.show_positional_help();
 
       // Define engine options
-      options.add_options()
-        ("g,game-assets", "Path to a Gothic or Gothic 2 installation",
-         cxxopts::value<bs::Path>(originalAssetsPath), "[PATH]")
-        ("video-x-res", "X resolution", cxxopts::value<unsigned int>(resolutionX), "[PX]")
-        ("video-y-res", "Y resolution", cxxopts::value<unsigned int>(resolutionY), "[PX]")
-        ("video-fullscreen", "Run in fullscreen mode", cxxopts::value<bool>(isFullscreen))
-        ;
+      options.add_options()("g,game-assets", "Path to a Gothic or Gothic 2 installation",
+                            cxxopts::value<bs::Path>(originalAssetsPath), "[PATH]")(
+          "video-x-res", "X resolution", cxxopts::value<unsigned int>(resolutionX), "[PX]")(
+          "video-y-res", "Y resolution", cxxopts::value<unsigned int>(resolutionY), "[PX]")(
+          "video-fullscreen", "Run in fullscreen mode", cxxopts::value<bool>(isFullscreen));
 
       // Allow game-assets to also be a positional
       options.parse_positional({"game-assets"});
@@ -82,14 +79,15 @@ namespace REGoth
         {
           REGOTH_LOG(Info, Uncategorized, "Failed. Trying current working directory...");
 
-          originalAssetsPath
-            = OriginalGameFiles::findGameFilesRoot(bs::FileSystem::getWorkingDirectoryPath());
+          originalAssetsPath =
+              OriginalGameFiles::findGameFilesRoot(bs::FileSystem::getWorkingDirectoryPath());
 
           if (originalAssetsPath.isEmpty())
           {
             REGOTH_LOG(Info, Uncategorized, "Failed. Giving up.");
-            REGOTH_THROW(InvalidStateException, "Could not find a game asset folder. Try "
-                                                "specifying it with `--game-assets`.");
+            REGOTH_THROW(InvalidStateException,
+                         "Could not find a game asset folder. Try "
+                         "specifying it with `--game-assets`.");
           }
         }
 
@@ -105,8 +103,10 @@ namespace REGoth
 
         if (originalAssetsPath.isEmpty())
         {
-          REGOTH_THROW(InvalidStateException, "Could not find a Gothic or Gothic 2 installation at "
-                                              "the supplied path `" + userInput + "`.");
+          REGOTH_THROW(InvalidStateException,
+                       "Could not find a Gothic or Gothic 2 installation at "
+                       "the supplied path `" +
+                           userInput + "`.");
         }
       }
     }
@@ -126,8 +126,7 @@ namespace REGoth
     bs::Path originalAssetsPath;
     unsigned int resolutionX = 1280;
     unsigned int resolutionY = 720;
-    bool isFullscreen = false;
-
+    bool isFullscreen        = false;
   };
 
   /**
@@ -152,9 +151,7 @@ namespace REGoth
    */
   class REGothEngine
   {
-
   public:
-
     virtual ~REGothEngine();
 
     /**
@@ -243,7 +240,6 @@ namespace REGoth
     virtual const EngineConfig* config() const = 0;
 
   protected:
-
     /**
      * Main camera this engines renders with
      */
@@ -253,7 +249,6 @@ namespace REGoth
      * Path to REGoth's own `content`-directory and resource loader.
      */
     bs::SPtr<EngineContent> mEngineContent;
-
   };
 
   /**
@@ -261,9 +256,7 @@ namespace REGoth
    */
   class REGothEngineDefaultConfig : public REGothEngine
   {
-
   public:
-
     /**
      * Constructs an engine object given a configuration.
      * @param config Engine configuration.
@@ -278,12 +271,10 @@ namespace REGoth
     const EngineConfig* config() const override;
 
   private:
-
     /**
      * Engine base configuration.
      */
     std::unique_ptr<const EngineConfig> mConfig;
-
   };
 
   /**
@@ -297,8 +288,9 @@ namespace REGoth
   template <class T>
   std::unique_ptr<const T> parseArguments(int argc, char** argv)
   {
-    static_assert(std::is_base_of<EngineConfig, T>(), "Template class must have "
-                                                      "`REGoth::EngineConfig` as base class");
+    static_assert(std::is_base_of<EngineConfig, T>(),
+                  "Template class must have "
+                  "`REGoth::EngineConfig` as base class");
 
     std::unique_ptr<T> config = std::make_unique<T>();
 
@@ -311,11 +303,9 @@ namespace REGoth
     cxxopts::Options options{argv[0], "REGoth - zEngine Reimplementation."};
 
     // Add general options.
-    options.add_options()
-      ("h,help", "Print this help message", cxxopts::value<bool>(help))
-      ("version", "Print the REGoth version", cxxopts::value<bool>(version))
-      ("v,verbosity", "Verbosity level", cxxopts::value<bool>())
-      ;
+    options.add_options()("h,help", "Print this help message", cxxopts::value<bool>(help))(
+        "version", "Print the REGoth version", cxxopts::value<bool>(version))(
+        "v,verbosity", "Verbosity level", cxxopts::value<bool>());
 
     // Add options (engine options and specialised ones).
     config->registerCLIEngineOptions(options);
@@ -353,7 +343,6 @@ namespace REGoth
 
     return config;
   }
-
 
   /**
    * Bootstrap and run the given engine.

@@ -21,7 +21,6 @@
 class REGothWorldCacheTest : public REGoth::REGothEngineDefaultConfig
 {
 public:
-
   using REGoth::REGothEngineDefaultConfig::REGothEngineDefaultConfig;
 
   void setupMainCamera() override
@@ -62,8 +61,8 @@ public:
 
 int main(int argc, char** argv)
 {
-  std::unique_ptr<const REGoth::EngineConfig> config
-      = REGoth::parseArguments<REGoth::EngineConfig>(argc, argv);
+  std::unique_ptr<const REGoth::EngineConfig> config =
+      REGoth::parseArguments<REGoth::EngineConfig>(argc, argv);
   REGothWorldCacheTest engine{std::move(config)};
 
   return REGoth::runEngine(engine);

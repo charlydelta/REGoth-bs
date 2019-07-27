@@ -1,7 +1,7 @@
 #include "REGothEngine.hpp"
 #include <BsApplication.h>
-#include <cxxopts.hpp>
 #include <assert.h>
+#include <cxxopts.hpp>
 #include <BsZenLib/ImportMaterial.hpp>
 #include <BsZenLib/ImportPath.hpp>
 #include <BsZenLib/ResourceManifest.hpp>
@@ -142,10 +142,8 @@ void REGothEngine::setupInput()
 
   // Camera controls for axes (analog input, e.g. mouse or gamepad thumbstick)
   // These return values in [-1.0, 1.0] range.
-  inputConfig->registerAxis("Horizontal",
-                            VIRTUAL_AXIS_DESC(static_cast<UINT32>(InputAxis::MouseX)));
-  inputConfig->registerAxis("Vertical",
-                            VIRTUAL_AXIS_DESC(static_cast<UINT32>(InputAxis::MouseY)));
+  inputConfig->registerAxis("Horizontal", VIRTUAL_AXIS_DESC(static_cast<UINT32>(InputAxis::MouseX)));
+  inputConfig->registerAxis("Vertical", VIRTUAL_AXIS_DESC(static_cast<UINT32>(InputAxis::MouseY)));
 }
 
 void REGothEngine::setupMainCamera()
@@ -229,8 +227,8 @@ void REGothEngine::shutdown()
   }
 }
 
-REGothEngineDefaultConfig::REGothEngineDefaultConfig(std::unique_ptr<const EngineConfig>&& config) :
-  mConfig{std::move(config)}
+REGothEngineDefaultConfig::REGothEngineDefaultConfig(std::unique_ptr<const EngineConfig>&& config)
+    : mConfig{std::move(config)}
 {
   // pass
 }
@@ -258,8 +256,9 @@ int ::REGoth::runEngine(REGothEngine& engine)
 
   if (!engine.hasFoundGameFiles())
   {
-    REGOTH_LOG(Fatal, Uncategorized, "No files loaded into the VDFS - is the game assets path "
-                                     "correct?");
+    REGOTH_LOG(Fatal, Uncategorized,
+               "No files loaded into the VDFS - is the game assets path "
+               "correct?");
     return EXIT_FAILURE;
   }
 
