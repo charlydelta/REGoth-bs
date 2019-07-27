@@ -1,8 +1,5 @@
 cmake_minimum_required (VERSION 3.13.0)
 
-cmake_policy(SET CMP0077 NEW) # option() honors normal variables.
-                              # https://cmake.org/cmake/help/latest/policy/CMP0077.html
-
 ###############################################################################
 #                               Automate VCPKG                                #
 ###############################################################################
@@ -72,19 +69,19 @@ else()
   set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
   # Enable exceptions in bsf as some dependencies (like cxxopts) rely on them.
-  set(BSF_ENABLE_EXCEPTIONS ON)
+  set(BSF_ENABLE_EXCEPTIONS ON CACHE BOOL "" FORCE)
 
   add_subdirectory(lib/bsf)
 
 endif()
 
 # BsZenLib will try to find bs:f for itself as well. Since we already have a bsf-target, skip that.
-set(BSZENLIB_SKIP_FIND_BSF ON)
+set(BSZENLIB_SKIP_FIND_BSF ON CACHE BOOL "" FORCE)
 add_subdirectory(lib/BsZenLib)
 
 # cxxopts as library to parse command line options.
-set(CXXOPTS_BUILD_EXAMPLES OFF) # Disable unnecessary targets for examples.
-set(CXXOPTS_BUILD_TESTS OFF) # Disable unnecessary targets for unit tests.
+set(CXXOPTS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) # Disable unnecessary targets for examples.
+set(CXXOPTS_BUILD_TESTS OFF CACHE BOOL "" FORCE) # Disable unnecessary targets for unit tests.
 add_definitions(-DCXXOPTS_NO_RTTI) # Disable RTTI dependent instructions.
 add_subdirectory(lib/cxxopts)
 
