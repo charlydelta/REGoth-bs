@@ -1,15 +1,22 @@
 #include "REGothEngine.hpp"
+
+#include <cassert>
+#include <iostream>
+#include <memory>
+
 #include <BsApplication.h>
-#include <assert.h>
-#include <cxxopts.hpp>
-#include <BsZenLib/ImportMaterial.hpp>
-#include <BsZenLib/ImportPath.hpp>
-#include <BsZenLib/ResourceManifest.hpp>
 #include <Components/BsCCamera.h>
 #include <FileSystem/BsFileSystem.h>
 #include <Importer/BsImporter.h>
 #include <Input/BsVirtualInput.h>
 #include <Scene/BsSceneObject.h>
+
+#include <BsZenLib/ImportMaterial.hpp>
+#include <BsZenLib/ImportPath.hpp>
+#include <BsZenLib/ResourceManifest.hpp>
+
+#include <cxxopts.hpp>
+
 #include <engine-content/EngineContent.hpp>
 #include <exception/Throw.hpp>
 #include <log/logging.hpp>
@@ -257,8 +264,7 @@ int ::REGoth::runEngine(REGothEngine& engine)
   if (!engine.hasFoundGameFiles())
   {
     REGOTH_LOG(Fatal, Uncategorized,
-               "No files loaded into the VDFS - is the game assets path "
-               "correct?");
+               "No files loaded into the VDFS - is the game assets path correct?");
     return EXIT_FAILURE;
   }
 

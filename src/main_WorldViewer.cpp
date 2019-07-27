@@ -19,8 +19,8 @@ struct WorldViewerConfig : public REGoth::EngineConfig
 {
   virtual void registerCLIOptions(cxxopts::Options& opts) override
   {
-    opts.add_options()("w,world", "Name of the world to load", cxxopts::value<bs::String>(world),
-                       "[NAME]");
+    opts.add_option("", "w", "world", "Name of the world to load", cxxopts::value<bs::String>(world),
+                    "[NAME]");
   }
 
   virtual void verifyCLIOptions() override

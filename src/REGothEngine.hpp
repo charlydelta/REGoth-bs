@@ -5,10 +5,13 @@
 
 #include <iostream>
 #include <memory>
+#include <string>
 
 #include <BsPrerequisites.h>
-#include <cxxopts.hpp>
 #include <FileSystem/BsFileSystem.h>
+
+#include <cxxopts.hpp>
+
 #include <exception/Throw.hpp>
 #include <log/logging.hpp>
 #include <original-content/OriginalGameFiles.hpp>
@@ -43,12 +46,17 @@ namespace REGoth
       options.positional_help("[GAME ASSETS PATH]");
       options.show_positional_help();
 
+      std::string grp = "";  // Default group
+
       // Define engine options
-      options.add_options()("g,game-assets", "Path to a Gothic or Gothic 2 installation",
-                            cxxopts::value<bs::Path>(originalAssetsPath), "[PATH]")(
-          "video-x-res", "X resolution", cxxopts::value<unsigned int>(resolutionX), "[PX]")(
-          "video-y-res", "Y resolution", cxxopts::value<unsigned int>(resolutionY), "[PX]")(
-          "video-fullscreen", "Run in fullscreen mode", cxxopts::value<bool>(isFullscreen));
+      options.add_option(grp, "g", "game-assets", "Path to a Gothic or Gothic 2 installation",
+                         cxxopts::value<bs::Path>(originalAssetsPath), "[PATH]");
+      options.add_option(grp, "", "video-x-res", "X resolution",
+                         cxxopts::value<unsigned int>(resolutionX), "[PX]");
+      options.add_option(grp, "", "video-y-res", "Y resolution",
+                         cxxopts::value<unsigned int>(resolutionY), "[PX]");
+      options.add_option(grp, "", "video-fullscreen", "Run in fullscreen mode",
+                         cxxopts::value<bool>(isFullscreen), "");
 
       // Allow game-assets to also be a positional
       options.parse_positional({"game-assets"});
@@ -85,9 +93,9 @@ namespace REGoth
           if (originalAssetsPath.isEmpty())
           {
             REGOTH_LOG(Info, Uncategorized, "Failed. Giving up.");
-            REGOTH_THROW(InvalidStateException,
-                         "Could not find a game asset folder. Try "
-                         "specifying it with `--game-assets`.");
+            REGOTH_THROW(
+                InvalidStateException,
+                "Could not find a game asset folder. Try specifying it with `--game-assets`.");
           }
         }
 
@@ -104,8 +112,7 @@ namespace REGoth
         if (originalAssetsPath.isEmpty())
         {
           REGOTH_THROW(InvalidStateException,
-                       "Could not find a Gothic or Gothic 2 installation at "
-                       "the supplied path `" +
+                       "Could not find a Gothic or Gothic 2 installation at the supplied path `" +
                            userInput + "`.");
         }
       }
