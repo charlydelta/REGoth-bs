@@ -69,7 +69,7 @@ git submodule update --init --recursive
 
 ## Engine
 
-The project is built via CMake. You will need at least CMake 3.9.0.
+The project is built via CMake. You will need at least CMake 3.13.
 
 ### Linux
 

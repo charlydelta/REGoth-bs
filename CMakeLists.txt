@@ -1,11 +1,15 @@
 cmake_minimum_required (VERSION 3.13.0)
 
+cmake_policy(SET CMP0077 NEW) # Enable CMake >=3.15 default behaviour to allow setting options
+                              # without them being overridden by setting caches.  Remove this
+                              # after switching to CMake 3.15
 
 ###############################################################################
 #                               Automate VCPKG                                #
 ###############################################################################
 
-option(SKIP_AUTOMATE_VCPKG "When ON, you will need to built the packages required by REGoth on your own or supply your own vcpkg toolchain.")
+option(SKIP_AUTOMATE_VCPKG "When ON, you will need to built the packages required by REGoth on \
+your own or supply your own vcpkg toolchain.")
 
 if (NOT SKIP_AUTOMATE_VCPKG)
   include(cmake/automate-vcpkg.cmake)
@@ -68,22 +72,21 @@ else()
   # (but later on when installing)
   set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
-  # Some other dependencies (like cxxopts) rely on exceptions.
+  # Enable exceptions in bsf as some dependencies (like cxxopts) rely on them.
   set(BSF_ENABLE_EXCEPTIONS ON)
 
   add_subdirectory(lib/bsf)
 
 endif()
 
-# BsZenLib will try to find bs:f for itself as well. Since we already
-# have a bsf-target, skip that.
-set(BSZENLIB_SKIP_FIND_BSF ON CACHE BOOL "" FORCE)
+# BsZenLib will try to find bs:f for itself as well. Since we already have a bsf-target, skip that.
+set(BSZENLIB_SKIP_FIND_BSF ON)
 add_subdirectory(lib/BsZenLib)
 
-# cxxopts as library to parse command line options
-set(CXXOPTS_BUILD_EXAMPLES OFF)
-set(CXXOPTS_BUILD_TESTS OFF)
-add_definitions(-DCXXOPTS_NO_RTTI)
+# cxxopts as library to parse command line options.
+set(CXXOPTS_BUILD_EXAMPLES OFF) # Disable unnecessary targets for examples.
+set(CXXOPTS_BUILD_TESTS OFF) # Disable unnecessary targets for unit tests.
+add_definitions(-DCXXOPTS_NO_RTTI) # Disable RTTI dependent instructions.
 add_subdirectory(lib/cxxopts)
 
 ###############################################################################
