@@ -4,12 +4,12 @@
    contain the root `toctree` directive.
 
 Welcome to REGoth's documentation!
-====================================
+==================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-   
+
    content/extending-docs
    content/setting-up-app
    content/world

@@ -153,6 +153,7 @@ You will need:
   * Sphinx (install via `pip install sphinx`)
   * Breathe (install via `pip install breathe`)
   * Sphinx ReadTheDocs-Theme (install via `pip install sphinx_rtd_theme`)
+  * PlantUML plugin for Sphinx (install via `pip install sphinxcontrib-plantuml`)
 
 With a cmake-project generated, run this from within the `build`-directory:
 
