@@ -173,13 +173,11 @@ and some others.</p>
 <code class="docutils literal notranslate"><span class="pre">src/main_HelloREGoth.cpp</span></code> and add the following skeleton to it:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;memory&gt;</span><span class="cp"></span>
 
-<span class="cp">#include</span> <span class="cpf">&quot;REGothEngine.hpp&quot;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;REGothEngine.hpp&gt;</span><span class="cp"></span>
 
 <span class="k">class</span> <span class="nc">HelloREGoth</span> <span class="o">:</span> <span class="k">public</span> <span class="n">REGoth</span><span class="o">::</span><span class="n">REGothEngineDefaultConfig</span>
 <span class="p">{</span>
-
 <span class="k">public</span><span class="o">:</span>
-
   <span class="c1">// Use the super class constructor for now.</span>
   <span class="k">using</span> <span class="n">REGoth</span><span class="o">::</span><span class="n">REGothEngineDefaultConfig</span><span class="o">::</span><span class="n">REGothEngineDefaultConfig</span><span class="p">;</span>
 
@@ -193,14 +191,13 @@ and some others.</p>
     <span class="c1">// Your code to setup the test environment goes here, but let&#39;s just greet REGoth for now. :)</span>
     <span class="n">REGOTH_LOG</span><span class="p">(</span><span class="n">Info</span><span class="p">,</span> <span class="n">Uncategorized</span><span class="p">,</span> <span class="s">&quot;Hello REGoth!&quot;</span><span class="p">);</span>
   <span class="p">}</span>
-
 <span class="p">};</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
 <span class="p">{</span>
   <span class="c1">// Create a default configuration object and parse the command line arguments.</span>
-  <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">REGoth</span><span class="o">::</span><span class="n">EngineConfig</span><span class="o">&gt;</span> <span class="n">config</span>
-      <span class="o">=</span> <span class="n">REGoth</span><span class="o">::</span><span class="n">parseArguments</span><span class="o">&lt;</span><span class="n">REGoth</span><span class="o">::</span><span class="n">EngineConfig</span><span class="o">&gt;</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">REGoth</span><span class="o">::</span><span class="n">EngineConfig</span><span class="o">&gt;</span> <span class="n">config</span> <span class="o">=</span>
+      <span class="n">REGoth</span><span class="o">::</span><span class="n">parseArguments</span><span class="o">&lt;</span><span class="n">REGoth</span><span class="o">::</span><span class="n">EngineConfig</span><span class="o">&gt;</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
   <span class="c1">// Construct the engine and pass the configuration object.</span>
   <span class="n">HelloREGoth</span> <span class="n">engine</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">config</span><span class="p">)};</span>
 
@@ -229,20 +226,17 @@ easily test certain aspects.  The following template shows what needs to be adde
 use of the internally used library, namely <a class="reference external" href="https://github.com/jarro2783/cxxopts">cxxopts</a>, for command line parsing.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;memory&gt;</span><span class="cp"></span>
 
-<span class="cp">#include</span> <span class="cpf">&quot;REGothEngine.hpp&quot;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;REGothEngine.hpp&gt;</span><span class="cp"></span>
 
 <span class="k">struct</span> <span class="nl">HelloREGothConfig</span> <span class="p">:</span> <span class="k">public</span> <span class="n">REGoth</span><span class="o">::</span><span class="n">EngineConfig</span>
 <span class="p">{</span>
-
   <span class="c1">// Here we define the CLI options using cxxopts.</span>
   <span class="k">virtual</span> <span class="kt">void</span> <span class="n">registerCLIOptions</span><span class="p">(</span><span class="n">cxxopts</span><span class="o">::</span><span class="n">Options</span><span class="o">&amp;</span> <span class="n">opts</span><span class="p">)</span> <span class="k">override</span>
   <span class="p">{</span>
     <span class="c1">// We only define one option, namely `--greeting`, which will be written into the `greeting`</span>
     <span class="c1">// attribute in this struct.</span>
-    <span class="n">opts</span><span class="p">.</span><span class="n">add_options</span><span class="p">()</span>
-      <span class="p">(</span><span class="s">&quot;greeting&quot;</span><span class="p">,</span> <span class="s">&quot;Specify your custom greeting&quot;</span><span class="p">,</span> <span class="n">cxxopts</span><span class="o">::</span><span class="n">value</span><span class="o">&lt;</span><span class="n">bs</span><span class="o">::</span><span class="n">String</span><span class="o">&gt;</span><span class="p">(</span><span class="n">greeting</span><span class="p">),</span>
-       <span class="s">&quot;[GREETING]&quot;</span><span class="p">)</span>
-      <span class="p">;</span>
+    <span class="n">opts</span><span class="p">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="s">&quot;greeting&quot;</span><span class="p">,</span> <span class="s">&quot;Specify your custom greeting&quot;</span><span class="p">,</span>
+                    <span class="n">cxxopts</span><span class="o">::</span><span class="n">value</span><span class="o">&lt;</span><span class="n">bs</span><span class="o">::</span><span class="n">String</span><span class="o">&gt;</span><span class="p">(</span><span class="n">greeting</span><span class="p">),</span> <span class="s">&quot;[GREETING]&quot;</span><span class="p">);</span>
   <span class="p">}</span>
 
   <span class="c1">// Here we can verify the parsed options and modify the if need be.</span>
@@ -268,13 +262,11 @@ use of the internally used library, namely <a class="reference external" href="h
 <span class="c1">// We don&#39;t derive from `REGoth::REGothEngineDefaultConfig` now for obvious reason.</span>
 <span class="k">class</span> <span class="nc">HelloREGoth</span> <span class="o">:</span> <span class="k">public</span> <span class="n">REGoth</span><span class="o">::</span><span class="n">REGothEngine</span>
 <span class="p">{</span>
-
 <span class="k">public</span><span class="o">:</span>
-
   <span class="c1">// We define a constructor to make sure that our engine can only be instantiated with</span>
   <span class="c1">// the correct configuration object type.</span>
-  <span class="n">HelloREGoth</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">HelloREGothConfig</span><span class="o">&gt;&amp;&amp;</span> <span class="n">config</span><span class="p">)</span> <span class="o">:</span>
-      <span class="n">mConfig</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">config</span><span class="p">)}</span>
+  <span class="n">HelloREGoth</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">HelloREGothConfig</span><span class="o">&gt;&amp;&amp;</span> <span class="n">config</span><span class="p">)</span>
+      <span class="o">:</span> <span class="n">mConfig</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">config</span><span class="p">)}</span>
   <span class="p">{</span>
     <span class="c1">// pass</span>
   <span class="p">}</span>
@@ -297,17 +289,15 @@ use of the internally used library, namely <a class="reference external" href="h
   <span class="p">}</span>
 
 <span class="k">private</span><span class="o">:</span>
-
   <span class="c1">// In this member, our configuration object will be stored.</span>
   <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">HelloREGothConfig</span><span class="o">&gt;</span> <span class="n">mConfig</span><span class="p">;</span>
-
 <span class="p">};</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
 <span class="p">{</span>
   <span class="c1">// Create a default configuration object and parse the command line arguments.</span>
-  <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">HelloREGothConfig</span><span class="o">&gt;</span> <span class="n">config</span>
-      <span class="o">=</span> <span class="n">REGoth</span><span class="o">::</span><span class="n">parseArguments</span><span class="o">&lt;</span><span class="n">HelloREGothConfig</span><span class="o">&gt;</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">HelloREGothConfig</span><span class="o">&gt;</span> <span class="n">config</span> <span class="o">=</span>
+      <span class="n">REGoth</span><span class="o">::</span><span class="n">parseArguments</span><span class="o">&lt;</span><span class="n">HelloREGothConfig</span><span class="o">&gt;</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span> <span class="n">argv</span><span class="p">);</span>
   <span class="c1">// Construct the engine and pass the configuration object.</span>
   <span class="n">HelloREGoth</span> <span class="n">engine</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">config</span><span class="p">)};</span>
 

@@ -30,7 +30,6 @@ As starting point, we will use this application template:
    class REGothWorldViewer : public REGoth::REGothEngineDefaultConfig
    {
    public:
-
      using REGoth::REGothEngineDefaultConfig::REGothEngineDefaultConfig;
 
      void setupMainCamera() override
