@@ -173,5 +173,5 @@ use of the internally used library, namely cxxopts_, for command line parsing.
 
 If you now call the executable ``./HelloREGoth $GAME_PATH``, you will see that still REGoth will be
 greeted (this is the default behaviour). However, after specifying the greeting, for example with
-``HelloREGoth $GAME_PATH --greeting you``, you should see ``[INFO] Hello you!`` instead.
+``./HelloREGoth $GAME_PATH --greeting you``, you should see ``[INFO] Hello you!`` instead.
 *(Don't greet JoTreeS tho.)*

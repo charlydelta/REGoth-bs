@@ -183,17 +183,20 @@
 <span class="cp">#include</span> <span class="cpf">&lt;Components/BsCCamera.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf">&lt;components/GameWorld.hpp&gt;</span><span class="cp"></span>
 
-<span class="k">class</span> <span class="nc">REGothWorldViewer</span> <span class="o">:</span> <span class="k">public</span> <span class="n">REGoth</span><span class="o">::</span><span class="n">REGothEngine</span>
+<span class="k">class</span> <span class="nc">REGothWorldViewer</span> <span class="o">:</span> <span class="k">public</span> <span class="n">REGoth</span><span class="o">::</span><span class="n">REGothEngineDefaultConfig</span>
 <span class="p">{</span>
 <span class="k">public</span><span class="o">:</span>
-  <span class="kt">void</span> <span class="n">setupMainCamera</span><span class="p">()</span> <span class="k">override</span>
+
+  <span class="k">using</span> <span class="n">REGoth</span><span class="o">::</span><span class="n">REGothEngineDefaultConfig</span><span class="o">::</span><span class="n">REGothEngineDefaultConfig</span><span class="p">;</span>
+
+  <span class="kt">void</span> <span class="nf">setupMainCamera</span><span class="p">()</span> <span class="k">override</span>
   <span class="p">{</span>
     <span class="n">REGoth</span><span class="o">::</span><span class="n">REGothEngine</span><span class="o">::</span><span class="n">setupMainCamera</span><span class="p">();</span>
 
     <span class="n">mMainCamera</span><span class="o">-&gt;</span><span class="n">SO</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">addComponent</span><span class="o">&lt;</span><span class="n">bs</span><span class="o">::</span><span class="n">FPSCamera</span><span class="o">&gt;</span><span class="p">();</span>
   <span class="p">}</span>
 
-  <span class="kt">void</span> <span class="n">setupScene</span><span class="p">()</span> <span class="k">override</span>
+  <span class="kt">void</span> <span class="nf">setupScene</span><span class="p">()</span> <span class="k">override</span>
   <span class="p">{</span>
 
   <span class="p">}</span>
