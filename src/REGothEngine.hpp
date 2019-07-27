@@ -310,9 +310,11 @@ namespace REGoth
     cxxopts::Options options{argv[0], "REGoth - zEngine Reimplementation."};
 
     // Add general options.
-    options.add_options()("h,help", "Print this help message", cxxopts::value<bool>(help))(
-        "version", "Print the REGoth version", cxxopts::value<bool>(version))(
-        "v,verbosity", "Verbosity level", cxxopts::value<bool>());
+    std::string grp = "";
+    options.add_option(grp, "h", "help", "Print this help message", cxxopts::value<bool>(help), "");
+    options.add_option(grp, "", "version", "Print the REGoth version", cxxopts::value<bool>(version),
+                       "");
+    options.add_option(grp, "v", "verbosity", "Verbosity level", cxxopts::value<bool>(), "");
 
     // Add options (engine options and specialised ones).
     config->registerCLIEngineOptions(options);
