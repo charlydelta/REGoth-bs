@@ -1,8 +1,7 @@
 cmake_minimum_required (VERSION 3.13.0)
 
-cmake_policy(SET CMP0077 NEW) # Enable CMake >=3.15 default behaviour to allow setting options
-                              # without them being overridden by setting caches.  Remove this
-                              # after switching to CMake 3.15
+cmake_policy(SET CMP0077 NEW) # option() honors normal variables.
+                              # https://cmake.org/cmake/help/latest/policy/CMP0077.html
 
 ###############################################################################
 #                               Automate VCPKG                                #
