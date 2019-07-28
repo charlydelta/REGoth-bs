@@ -33,9 +33,18 @@ public:
   {
     using namespace REGoth;
 
-    HGameWorld world = GameWorld::importZEN("OLDWORLD.ZEN");
+    HGameWorld world = GameWorld::importZEN("WORLD.ZEN");
 
     world->waynet()->debugDraw(mTextLabels);
+
+    // Commented out: Pathfinder stresstest
+    // auto from = world->waynet()->findWaypoint("SPAWN_MOLERAT02_SPAWN01");
+    // auto to   = world->waynet()->findWaypoint("SPAWN_TALL_PATH_BANDITOS2_02_04");
+
+    // while (true)
+    // {
+    //   world->waynet()->findWay(from, to);
+    // }
   }
 
 protected:
